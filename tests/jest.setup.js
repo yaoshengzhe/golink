@@ -35,6 +35,14 @@ global.chrome = {
   action: {
     setPopup: jest.fn(),
     setTitle: jest.fn()
+  },
+  omnibox: {
+    onInputEntered: {
+      addListener: jest.fn()
+    },
+    onInputChanged: {
+      addListener: jest.fn()
+    }
   }
 };
 

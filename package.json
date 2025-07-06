@@ -4,7 +4,10 @@
   "description": "Personal go-links system for quick navigation to your favorite URLs",
   "main": "background.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest tests/*.unit.test.js",
+    "test:all": "jest",
+    "test:unit": "jest tests/*.unit.test.js",
+    "test:integration": "jest tests/*.test.js --testPathIgnorePatterns=unit.test.js",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "validate": "node validate.js",
@@ -12,7 +15,8 @@
     "lint:fix": "eslint *.js tests/*.js --fix",
     "format": "prettier --write *.js *.html *.css tests/*.js",
     "format:check": "prettier --check *.js *.html *.css tests/*.js",
-    "build": "npm run validate && npm run lint && npm run test",
+    "build": "npm run validate && npm run lint && npm run test:unit",
+    "build-with-tests": "npm run validate && npm run lint && npm run test:all",
     "pre-commit": "npm run format && npm run lint:fix && npm run validate && npm run test",
     "zip": "zip -r golinks-extension.zip . -x 'node_modules/*' 'tests/*' '*.git*' 'package*.json' '.eslintrc*' '.prettierrc*' 'jest.config.js'",
     "clean": "rm -rf node_modules coverage .nyc_output golinks-extension.zip"
@@ -62,7 +66,8 @@
       "browser": true,
       "es2021": true,
       "jest": true,
-      "webextensions": true
+      "webextensions": true,
+      "node": true
     },
     "extends": [
       "eslint:recommended",

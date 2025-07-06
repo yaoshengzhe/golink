@@ -4,10 +4,10 @@
 const { setupExtensionTest, cleanupExtensionTest } = require('./test-helpers');
 
 describe('Background Script', () => {
-  let browser, page, extensionId;
+  let browser, page;
 
   beforeAll(async () => {
-    ({ browser, page, extensionId } = await setupExtensionTest());
+    ({ browser, page } = await setupExtensionTest());
   });
 
   afterAll(async () => {

@@ -227,7 +227,7 @@ async function clearAndType(page, selector, text) {
 /**
  * Get extension manifest for version checking
  */
-async function getExtensionManifest(extensionId) {
+async function getExtensionManifest(_extensionId) {
   const fs = require('fs');
   const manifestPath = path.resolve(__dirname, '..', 'manifest.json');
   

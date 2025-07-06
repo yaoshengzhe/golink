@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const shortNameInput = document.getElementById('shortName');
     const urlInput = document.getElementById('url');
     const descriptionInput = document.getElementById('description');
-    const messageDiv = document.getElementById('message');
+    const messageDiv = document.getElementById('message'); // eslint-disable-line no-unused-vars
     const cancelBtn = document.getElementById('cancelBtn');
     const existingMappingDiv = document.getElementById('existingMapping');
     const updateBtn = document.getElementById('updateBtn');

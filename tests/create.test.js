@@ -155,10 +155,9 @@ describe('Create Page', () => {
         return !form.classList.contains('hidden');
       });
       
-      if (formVisible) {
-        const focusedElement = await page.evaluate(() => document.activeElement.id);
-        expect(focusedElement).toBe('url');
-      }
+      expect(formVisible).toBe(true);
+      const focusedElement = await page.evaluate(() => document.activeElement.id);
+      expect(focusedElement).toBe('url');
     });
   });
 
