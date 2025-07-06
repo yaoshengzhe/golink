@@ -74,7 +74,18 @@ go/spotify     → https://open.spotify.com/
 4. Click "Load unpacked" → select extension folder
 5. Pin the extension to your toolbar
 
-### Safari
+### Safari (Automated)
+```bash
+npm run safari:full    # Creates Xcode project automatically
+```
+
+Then:
+1. Open the generated Xcode project: `safari-build/GoLinks Safari/GoLinks Safari.xcodeproj`
+2. In Xcode: Product → Build (⌘B)
+3. Safari → Develop → Allow Unsigned Extensions
+4. Safari → Preferences → Extensions → Enable GoLinks
+
+### Safari (Manual)
 1. Download this repository
 2. Safari → Develop → Web Extensions → Convert Extension
 3. Select the extension folder
