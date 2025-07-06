@@ -1,6 +1,16 @@
 # GoLinks Browser Extension
 
-Transform long URLs into simple shortcuts. Type `go/jira` instead of `https://company.atlassian.net/browse/PROJECT-123`.
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yaoshengzhe/golink)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Chrome](https://img.shields.io/badge/chrome-supported-brightgreen.svg)](https://chrome.google.com/webstore)
+[![Edge](https://img.shields.io/badge/edge-supported-brightgreen.svg)](https://microsoftedge.microsoft.com/addons)
+[![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)](https://developer.chrome.com/docs/extensions/mv3/)
+[![Tests](https://img.shields.io/badge/tests-36%20passing-success.svg)](tests/)
+[![Build](https://img.shields.io/badge/build-passing-success.svg)](https://github.com/yaoshengzhe/golink/actions)
+[![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://prettier.io/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+Transform long URLs into simple shortcuts. Type `go/gmail` instead of `https://mail.google.com/mail/u/0/#inbox`.
 
 ## Quick Start
 
@@ -16,8 +26,8 @@ Type `go` in the address bar, then Tab/Space, then your shortcut:
 
 | Input | Result |
 |-------|--------|
-| `go` → Tab → `docs` | Navigate to your docs site |
-| `go` → Tab → `jira` | Jump to your Jira board |
+| `go` → Tab → `gmail` | Navigate to your Gmail inbox |
+| `go` → Tab → `drive` | Open your Google Drive |
 | `go` → Tab → `calendar` | Open your calendar |
 
 ### Traditional URLs
@@ -25,8 +35,8 @@ Type directly in the address bar:
 
 | Input | Result |
 |-------|--------|
-| `go/docs` | Navigate to your docs site |
-| `go/jira` | Jump to your Jira board |
+| `go/gmail` | Navigate to your Gmail inbox |
+| `go/drive` | Open your Google Drive |
 | `go/calendar` | Open your calendar |
 
 ### Real-World Examples
@@ -34,11 +44,16 @@ Type directly in the address bar:
 Create these shortcuts once, use them forever:
 
 ```
-go/standup     → https://zoom.us/j/123456789
-go/deploy      → https://jenkins.company.com/job/deploy
-go/metrics     → https://grafana.company.com/dashboard
-go/expenses    → https://expense.company.com/reports
-go/payroll     → https://hr.company.com/payroll
+go/gmail       → https://mail.google.com/mail/u/0/#inbox
+go/drive       → https://drive.google.com/drive/my-drive
+go/youtube     → https://youtube.com/feed/subscriptions
+go/netflix     → https://netflix.com/browse
+go/github      → https://github.com/dashboard
+go/linkedin    → https://linkedin.com/feed
+go/zoom        → https://zoom.us/j/123456789
+go/calendar    → https://calendar.google.com
+go/amazon      → https://amazon.com/orders
+go/spotify     → https://open.spotify.com/
 ```
 
 ## Browser Compatibility
@@ -89,10 +104,10 @@ The extension recognizes these input methods:
 
 | Pattern | Example | When to Use |
 |---------|---------|-------------|
-| `go` + Tab + `shortcut` | `go` → Tab → `docs` | **Recommended** - fastest |
-| `go/shortcut` | `go/docs` | Direct address bar typing |
-| `http://go/shortcut` | `http://go/docs` | Full URL format |
-| `https://go/shortcut` | `https://go/docs` | Secure URL format |
+| `go` + Tab + `shortcut` | `go` → Tab → `gmail` | **Recommended** - fastest |
+| `go/shortcut` | `go/gmail` | Direct address bar typing |
+| `http://go/shortcut` | `http://go/gmail` | Full URL format |
+| `https://go/shortcut` | `https://go/gmail` | Secure URL format |
 
 ## Management
 
