@@ -9,6 +9,10 @@
     "tabs",
     "webNavigation"
   ],
+
+  "omnibox": {
+    "keyword": "go"
+  },
   
   "host_permissions": [
     "http://go/*",

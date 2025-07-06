@@ -34,12 +34,19 @@ A browser extension that creates a personal go-links system for quick navigation
 
 ### Creating Your First GoLink
 
+**Method 1: Omnibox (Recommended)**
+1. Type `go` in your address bar, then press Tab or Space
+2. Type your short name (e.g., `docs`)
+3. Press Enter to navigate or create the mapping
+4. If no mapping exists, you'll be redirected to the create page
+5. Enter the full URL (e.g., `https://company.internal.docs.com`)
+6. Add an optional description and click "Create GoLink"
+
+**Method 2: Traditional URL**
 1. Type `go/docs` (or any short name) in your address bar
 2. Since no mapping exists, you'll be redirected to the create page
-3. Enter the full URL (e.g., `https://company.internal.docs.com`)
-4. Add an optional description
-5. Click "Create GoLink"
-6. You'll be redirected to your saved URL
+3. Enter the full URL and description
+4. Click "Create GoLink"
 
 ### Managing GoLinks
 
@@ -55,18 +62,25 @@ Click the GoLinks extension icon in your browser toolbar to:
 ### Supported URL Patterns
 
 The extension recognizes these patterns:
+- **Omnibox**: Type `go` + Tab/Space + `xyz` (recommended)
 - `go/xyz`
 - `http://go/xyz`
 - `https://go/xyz`
 
 ## Examples
 
+**Omnibox Usage:**
+```
+go → docs → https://company.docs.com
+go → jira → https://company.atlassian.net
+go → gmail → https://mail.google.com
+```
+
+**Traditional URL Usage:**
 ```
 go/docs → https://company.docs.com
 go/jira → https://company.atlassian.net
 go/gmail → https://mail.google.com
-go/calendar → https://calendar.google.com
-go/drive → https://drive.google.com
 ```
 
 ## File Structure

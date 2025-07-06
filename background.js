@@ -178,6 +178,66 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
+// Handle omnibox input (go xyz)
+chrome.omnibox.onInputEntered.addListener(async (text, disposition) => {
+  const shortName = text.trim();
+  
+  if (shortName) {
+    try {
+      const mapping = await getGoLinkMapping(shortName);
+      
+      if (mapping && mapping.url) {
+        // Navigate to the mapped URL
+        console.log(`Navigating to go/${shortName} -> ${mapping.url}`);
+        
+        if (disposition === 'currentTab') {
+          chrome.tabs.update({ url: mapping.url });
+        } else {
+          chrome.tabs.create({ url: mapping.url });
+        }
+      } else {
+        // No mapping found, redirect to create page
+        console.log(`No mapping found for go/${shortName}, redirecting to create page`);
+        const createUrl = chrome.runtime.getURL('create.html') + `?shortName=${encodeURIComponent(shortName)}`;
+        
+        if (disposition === 'currentTab') {
+          chrome.tabs.update({ url: createUrl });
+        } else {
+          chrome.tabs.create({ url: createUrl });
+        }
+      }
+    } catch (error) {
+      console.error('Error handling omnibox go-link:', error);
+    }
+  }
+});
+
+// Provide suggestions for omnibox
+chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
+  const input = text.trim().toLowerCase();
+  
+  if (input.length > 0) {
+    try {
+      const mappings = await getAllGoLinkMappings();
+      const suggestions = [];
+      
+      for (const [shortName, mapping] of Object.entries(mappings)) {
+        if (shortName.toLowerCase().includes(input) || 
+            (mapping.description && mapping.description.toLowerCase().includes(input))) {
+          suggestions.push({
+            content: shortName,
+            description: `${shortName} → ${mapping.url}${mapping.description ? ' - ' + mapping.description : ''}`
+          });
+        }
+      }
+      
+      suggest(suggestions.slice(0, 5)); // Limit to 5 suggestions
+    } catch (error) {
+      console.error('Error getting omnibox suggestions:', error);
+    }
+  }
+});
+
 // Handle extension installation
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
