@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create GoLink</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔗 Create GoLink</h1>
+            <p>Create a new shortcut for quick navigation</p>
+        </header>
+
+        <div class="form-container">
+            <form id="createForm">
+                <div class="form-group">
+                    <label for="shortName">Short Name:</label>
+                    <div class="input-with-prefix">
+                        <span class="prefix">go/</span>
+                        <input 
+                            type="text" 
+                            id="shortName" 
+                            name="shortName" 
+                            required 
+                            placeholder="docs"
+                            pattern="[a-zA-Z0-9-_]+"
+                            title="Only letters, numbers, hyphens, and underscores allowed"
+                        >
+                    </div>
+                    <small class="help-text">Only letters, numbers, hyphens, and underscores allowed</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="url">Target URL:</label>
+                    <input 
+                        type="url" 
+                        id="url" 
+                        name="url" 
+                        required 
+                        placeholder="https://example.com/docs"
+                    >
+                    <small class="help-text">The full URL you want to navigate to</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description (optional):</label>
+                    <input 
+                        type="text" 
+                        id="description" 
+                        name="description" 
+                        placeholder="Documentation site"
+                        maxlength="100"
+                    >
+                    <small class="help-text">Optional description to help you remember</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Create GoLink</button>
+                    <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="message" class="message hidden"></div>
+
+        <div class="info-section">
+            <h3>How to use:</h3>
+            <ol>
+                <li>Type <code>go/yourname</code> in the address bar</li>
+                <li>Press Enter to navigate to your saved URL</li>
+                <li>Manage your links using the extension popup</li>
+            </ol>
+        </div>
+
+        <div class="existing-mapping hidden" id="existingMapping">
+            <h3>⚠️ Mapping Already Exists</h3>
+            <p>A mapping for <strong id="existingShortName"></strong> already exists:</p>
+            <div class="existing-details">
+                <div><strong>Current URL:</strong> <span id="existingUrl"></span></div>
+                <div><strong>Description:</strong> <span id="existingDescription"></span></div>
+            </div>
+            <div class="form-actions">
+                <button id="updateBtn" class="btn btn-warning">Update Mapping</button>
+                <button id="goToExistingBtn" class="btn btn-success">Go to Existing URL</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="create.js"></script>
+</body>
+</html>
