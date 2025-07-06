@@ -1,0 +1,17 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="#007bff" stroke="#0056b3" stroke-width="4"/>
+  
+  <!-- Link icon -->
+  <g transform="translate(32, 32)">
+    <!-- Chain link -->
+    <path d="M20 12 C20 8, 24 4, 28 4 L36 4 C40 4, 44 8, 44 12 L44 20 C44 24, 40 28, 36 28 L32 28" 
+          fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    <path d="M44 20 C44 24, 40 28, 36 28 L28 28 C24 28, 20 24, 20 20 L20 12 C20 8, 24 4, 28 4 L32 4" 
+          fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    
+    <!-- "go" text -->
+    <text x="32" y="48" font-family="Arial, sans-serif" font-size="12" font-weight="bold" 
+          text-anchor="middle" fill="white">go</text>
+  </g>
+</svg>

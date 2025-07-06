@@ -1,0 +1,270 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    name: Validate Extension
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run validation
+      run: npm run validate
+      
+    - name: Check formatting
+      run: npm run format:check
+      
+    - name: Run linter
+      run: npm run lint
+      
+    - name: Upload validation results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: validation-results
+        path: |
+          validation-report.json
+          lint-results.json
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm run test:coverage
+      
+    - name: Upload coverage to Codecov
+      if: matrix.node-version == 18
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+        
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-node${{ matrix.node-version }}
+        path: |
+          coverage/
+          test-results.xml
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run security audit
+      run: npm audit --audit-level=moderate
+      
+    - name: Check for secrets
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  extension-test:
+    name: Extension Integration Tests
+    runs-on: ubuntu-latest
+    needs: [validate, test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install Chrome
+      uses: browser-actions/setup-chrome@latest
+      
+    - name: Run extension tests
+      run: npm run test -- --testPathPattern=integration
+      env:
+        HEADLESS: true
+        
+    - name: Upload extension test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: extension-test-results
+        path: |
+          test-screenshots/
+          extension-logs/
+
+  build:
+    name: Build Extension
+    runs-on: ubuntu-latest
+    needs: [validate, test, security]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build extension
+      run: npm run build
+      
+    - name: Create extension package
+      run: npm run zip
+      
+    - name: Upload extension package
+      uses: actions/upload-artifact@v4
+      with:
+        name: golinks-extension-${{ github.sha }}
+        path: golinks-extension.zip
+        
+    - name: Generate build report
+      run: |
+        echo "## Build Report" > build-report.md
+        echo "- **Commit**: ${{ github.sha }}" >> build-report.md
+        echo "- **Branch**: ${{ github.ref_name }}" >> build-report.md
+        echo "- **Node Version**: $(node --version)" >> build-report.md
+        echo "- **Build Time**: $(date)" >> build-report.md
+        echo "- **Package Size**: $(ls -lh golinks-extension.zip | awk '{print $5}')" >> build-report.md
+        
+    - name: Upload build report
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-report
+        path: build-report.md
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build, extension-test]
+    if: github.ref == 'refs/heads/main' && startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download extension package
+      uses: actions/download-artifact@v4
+      with:
+        name: golinks-extension-${{ github.sha }}
+        
+    - name: Extract version from manifest
+      id: version
+      run: |
+        VERSION=$(node -p "require('./manifest.json').version")
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        release_name: GoLinks Extension v${{ steps.version.outputs.version }}
+        body: |
+          ## GoLinks Extension v${{ steps.version.outputs.version }}
+          
+          ### Installation
+          1. Download the `golinks-extension.zip` file
+          2. Extract the contents
+          3. Load the extension in Chrome via "Load unpacked"
+          
+          ### Changes
+          See the commit history for detailed changes.
+          
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./golinks-extension.zip
+        asset_name: golinks-extension-v${{ steps.version.outputs.version }}.zip
+        asset_content_type: application/zip
+
+  notify:
+    name: Notify Status
+    runs-on: ubuntu-latest
+    needs: [validate, test, security, extension-test]
+    if: always()
+    
+    steps:
+    - name: Notify Success
+      if: ${{ needs.validate.result == 'success' && needs.test.result == 'success' && needs.security.result == 'success' && needs.extension-test.result == 'success' }}
+      run: |
+        echo "✅ All checks passed successfully!"
+        echo "Extension is ready for deployment."
+        
+    - name: Notify Failure
+      if: ${{ needs.validate.result == 'failure' || needs.test.result == 'failure' || needs.security.result == 'failure' || needs.extension-test.result == 'failure' }}
+      run: |
+        echo "❌ Some checks failed:"
+        echo "- Validation: ${{ needs.validate.result }}"
+        echo "- Tests: ${{ needs.test.result }}"
+        echo "- Security: ${{ needs.security.result }}"
+        echo "- Extension Tests: ${{ needs.extension-test.result }}"
+        exit 1

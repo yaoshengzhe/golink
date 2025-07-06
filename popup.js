@@ -92,7 +92,9 @@ document.addEventListener('DOMContentLoaded', function() {
         linkCount.textContent = `${mappingCount} link${mappingCount !== 1 ? 's' : ''}`;
         
         // Clear existing content
-        linksList.innerHTML = '';
+        while (linksList.firstChild) {
+            linksList.removeChild(linksList.firstChild);
+        }
         
         // Sort mappings by short name
         const sortedEntries = Object.entries(filteredMappings)
@@ -112,29 +114,76 @@ document.addEventListener('DOMContentLoaded', function() {
         const item = document.createElement('div');
         item.className = 'link-item';
         
-        item.innerHTML = `
-            <div class="link-info">
-                <div class="link-short-name">
-                    <span class="go-prefix">go/</span>${shortName}
-                </div>
-                <div class="link-url" title="${mapping.url}">${mapping.url}</div>
-                ${mapping.description ? `<div class="link-description">${mapping.description}</div>` : ''}
-            </div>
-            <div class="link-actions">
-                <button class="btn-icon" title="Copy go/${shortName}" data-action="copy" data-short-name="${shortName}">
-                    📋
-                </button>
-                <button class="btn-icon" title="Open ${mapping.url}" data-action="open" data-url="${mapping.url}">
-                    🔗
-                </button>
-                <button class="btn-icon" title="Edit" data-action="edit" data-short-name="${shortName}">
-                    ✏️
-                </button>
-                <button class="btn-icon btn-danger" title="Delete" data-action="delete" data-short-name="${shortName}">
-                    🗑️
-                </button>
-            </div>
-        `;
+        // Create link info section
+        const linkInfo = document.createElement('div');
+        linkInfo.className = 'link-info';
+        
+        // Create short name element
+        const linkShortName = document.createElement('div');
+        linkShortName.className = 'link-short-name';
+        const goPrefix = document.createElement('span');
+        goPrefix.className = 'go-prefix';
+        goPrefix.textContent = 'go/';
+        linkShortName.appendChild(goPrefix);
+        linkShortName.appendChild(document.createTextNode(shortName));
+        
+        // Create URL element
+        const linkUrl = document.createElement('div');
+        linkUrl.className = 'link-url';
+        linkUrl.title = mapping.url;
+        linkUrl.textContent = mapping.url;
+        
+        linkInfo.appendChild(linkShortName);
+        linkInfo.appendChild(linkUrl);
+        
+        // Create description element if exists
+        if (mapping.description) {
+            const linkDescription = document.createElement('div');
+            linkDescription.className = 'link-description';
+            linkDescription.textContent = mapping.description;
+            linkInfo.appendChild(linkDescription);
+        }
+        
+        // Create actions section
+        const linkActions = document.createElement('div');
+        linkActions.className = 'link-actions';
+        
+        // Create action buttons
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'btn-icon';
+        copyBtn.title = `Copy go/${shortName}`;
+        copyBtn.dataset.action = 'copy';
+        copyBtn.dataset.shortName = shortName;
+        copyBtn.textContent = '📋';
+        
+        const openBtn = document.createElement('button');
+        openBtn.className = 'btn-icon';
+        openBtn.title = `Open ${mapping.url}`;
+        openBtn.dataset.action = 'open';
+        openBtn.dataset.url = mapping.url;
+        openBtn.textContent = '🔗';
+        
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-icon';
+        editBtn.title = 'Edit';
+        editBtn.dataset.action = 'edit';
+        editBtn.dataset.shortName = shortName;
+        editBtn.textContent = '✏️';
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-icon btn-danger';
+        deleteBtn.title = 'Delete';
+        deleteBtn.dataset.action = 'delete';
+        deleteBtn.dataset.shortName = shortName;
+        deleteBtn.textContent = '🗑️';
+        
+        linkActions.appendChild(copyBtn);
+        linkActions.appendChild(openBtn);
+        linkActions.appendChild(editBtn);
+        linkActions.appendChild(deleteBtn);
+        
+        item.appendChild(linkInfo);
+        item.appendChild(linkActions);
 
         // Add click handlers for buttons
         item.addEventListener('click', handleLinkItemClick);
