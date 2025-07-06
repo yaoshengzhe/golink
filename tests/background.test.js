@@ -80,26 +80,32 @@ describe('Background Script', () => {
       const mapping = {
         shortName: 'test',
         url: 'https://example.com',
-        description: 'Test mapping'
+        description: 'Test mapping',
       };
 
-      await page.evaluate((mapping) => {
+      await page.evaluate(mapping => {
         return new Promise(resolve => {
-          chrome.runtime.sendMessage({
-            action: 'saveMapping',
-            shortName: mapping.shortName,
-            url: mapping.url,
-            description: mapping.description
-          }, resolve);
+          chrome.runtime.sendMessage(
+            {
+              action: 'saveMapping',
+              shortName: mapping.shortName,
+              url: mapping.url,
+              description: mapping.description,
+            },
+            resolve
+          );
         });
       }, mapping);
 
-      const retrieved = await page.evaluate((shortName) => {
+      const retrieved = await page.evaluate(shortName => {
         return new Promise(resolve => {
-          chrome.runtime.sendMessage({
-            action: 'getMapping',
-            shortName: shortName
-          }, resolve);
+          chrome.runtime.sendMessage(
+            {
+              action: 'getMapping',
+              shortName: shortName,
+            },
+            resolve
+          );
         });
       }, mapping.shortName);
 
@@ -111,28 +117,42 @@ describe('Background Script', () => {
     test('should get all mappings', async () => {
       // Create multiple mappings
       const mappings = [
-        { shortName: 'docs', url: 'https://docs.example.com', description: 'Documentation' },
-        { shortName: 'jira', url: 'https://jira.example.com', description: 'Issue tracker' }
+        {
+          shortName: 'docs',
+          url: 'https://docs.example.com',
+          description: 'Documentation',
+        },
+        {
+          shortName: 'jira',
+          url: 'https://jira.example.com',
+          description: 'Issue tracker',
+        },
       ];
 
       for (const mapping of mappings) {
-        await page.evaluate((mapping) => {
+        await page.evaluate(mapping => {
           return new Promise(resolve => {
-            chrome.runtime.sendMessage({
-              action: 'saveMapping',
-              shortName: mapping.shortName,
-              url: mapping.url,
-              description: mapping.description
-            }, resolve);
+            chrome.runtime.sendMessage(
+              {
+                action: 'saveMapping',
+                shortName: mapping.shortName,
+                url: mapping.url,
+                description: mapping.description,
+              },
+              resolve
+            );
           });
         }, mapping);
       }
 
       const allMappings = await page.evaluate(() => {
         return new Promise(resolve => {
-          chrome.runtime.sendMessage({
-            action: 'getAllMappings'
-          }, resolve);
+          chrome.runtime.sendMessage(
+            {
+              action: 'getAllMappings',
+            },
+            resolve
+          );
         });
       });
 
@@ -145,38 +165,47 @@ describe('Background Script', () => {
       const mapping = {
         shortName: 'temp',
         url: 'https://temp.example.com',
-        description: 'Temporary mapping'
+        description: 'Temporary mapping',
       };
 
       // Save mapping
-      await page.evaluate((mapping) => {
+      await page.evaluate(mapping => {
         return new Promise(resolve => {
-          chrome.runtime.sendMessage({
-            action: 'saveMapping',
-            shortName: mapping.shortName,
-            url: mapping.url,
-            description: mapping.description
-          }, resolve);
+          chrome.runtime.sendMessage(
+            {
+              action: 'saveMapping',
+              shortName: mapping.shortName,
+              url: mapping.url,
+              description: mapping.description,
+            },
+            resolve
+          );
         });
       }, mapping);
 
       // Delete mapping
-      await page.evaluate((shortName) => {
+      await page.evaluate(shortName => {
         return new Promise(resolve => {
-          chrome.runtime.sendMessage({
-            action: 'deleteMapping',
-            shortName: shortName
-          }, resolve);
+          chrome.runtime.sendMessage(
+            {
+              action: 'deleteMapping',
+              shortName: shortName,
+            },
+            resolve
+          );
         });
       }, mapping.shortName);
 
       // Verify deletion
-      const retrieved = await page.evaluate((shortName) => {
+      const retrieved = await page.evaluate(shortName => {
         return new Promise(resolve => {
-          chrome.runtime.sendMessage({
-            action: 'getMapping',
-            shortName: shortName
-          }, resolve);
+          chrome.runtime.sendMessage(
+            {
+              action: 'getMapping',
+              shortName: shortName,
+            },
+            resolve
+          );
         });
       }, mapping.shortName);
 
@@ -189,41 +218,44 @@ describe('Background Script', () => {
       // Save a mapping
       await page.evaluate(() => {
         return new Promise(resolve => {
-          chrome.runtime.sendMessage({
-            action: 'saveMapping',
-            shortName: 'redirect-test',
-            url: 'https://example.com/redirected',
-            description: 'Redirect test'
-          }, resolve);
+          chrome.runtime.sendMessage(
+            {
+              action: 'saveMapping',
+              shortName: 'redirect-test',
+              url: 'https://example.com/redirected',
+              description: 'Redirect test',
+            },
+            resolve
+          );
         });
       });
 
       // Navigate to go/redirect-test
       const newPage = await browser.newPage();
       await newPage.goto('http://go/redirect-test');
-      
+
       // Wait for redirect
       await newPage.waitForNavigation({ waitUntil: 'networkidle0' });
-      
+
       // Check if redirected to correct URL
       const currentUrl = newPage.url();
       expect(currentUrl).toBe('https://example.com/redirected');
-      
+
       await newPage.close();
     });
 
     test('should redirect to create page when mapping does not exist', async () => {
       const newPage = await browser.newPage();
       await newPage.goto('http://go/nonexistent');
-      
+
       // Wait for redirect
       await newPage.waitForNavigation({ waitUntil: 'networkidle0' });
-      
+
       // Check if redirected to create page
       const currentUrl = newPage.url();
       expect(currentUrl).toContain('create.html');
       expect(currentUrl).toContain('shortName=nonexistent');
-      
+
       await newPage.close();
     });
   });

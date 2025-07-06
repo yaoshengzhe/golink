@@ -2,29 +2,33 @@
 
 // Listen for navigation events
 chrome.webNavigation.onBeforeNavigate.addListener(
-  async (details) => {
+  async details => {
     // Only handle main frame navigation (not iframes)
     if (details.frameId !== 0) return;
-    
+
     const url = new URL(details.url);
-    
+
     // Check if this is a go/ URL pattern
     if (isGoLink(url)) {
       const shortName = extractShortName(url);
-      
+
       if (shortName) {
         try {
           // Look up the mapping
           const mapping = await getGoLinkMapping(shortName);
-          
+
           if (mapping && mapping.url) {
             // Redirect to the mapped URL
             console.log(`Redirecting go/${shortName} to ${mapping.url}`);
             chrome.tabs.update(details.tabId, { url: mapping.url });
           } else {
             // No mapping found, redirect to create page
-            console.log(`No mapping found for go/${shortName}, redirecting to create page`);
-            const createUrl = chrome.runtime.getURL('create.html') + `?shortName=${encodeURIComponent(shortName)}`;
+            console.log(
+              `No mapping found for go/${shortName}, redirecting to create page`
+            );
+            const createUrl =
+              chrome.runtime.getURL('create.html') +
+              `?shortName=${encodeURIComponent(shortName)}`;
             chrome.tabs.update(details.tabId, { url: createUrl });
           }
         } catch (error) {
@@ -37,8 +41,8 @@ chrome.webNavigation.onBeforeNavigate.addListener(
     url: [
       { hostEquals: 'go' },
       { urlMatches: '^https?://go/.*' },
-      { urlMatches: '^go/.*' }
-    ]
+      { urlMatches: '^go/.*' },
+    ],
   }
 );
 
@@ -62,7 +66,7 @@ function isGoLink(url) {
  */
 function extractShortName(url) {
   let shortName = '';
-  
+
   if (url.hostname === 'go') {
     // http://go/xyz or https://go/xyz
     shortName = url.pathname.substring(1); // Remove leading slash
@@ -76,7 +80,7 @@ function extractShortName(url) {
       shortName = match[1];
     }
   }
-  
+
   // Clean up any query parameters or fragments
   if (shortName.includes('?')) {
     shortName = shortName.split('?')[0];
@@ -84,7 +88,7 @@ function extractShortName(url) {
   if (shortName.includes('#')) {
     shortName = shortName.split('#')[0];
   }
-  
+
   return shortName;
 }
 
@@ -92,8 +96,8 @@ function extractShortName(url) {
  * Get a go-link mapping from storage
  */
 async function getGoLinkMapping(shortName) {
-  return new Promise((resolve) => {
-    chrome.storage.local.get([`golink_${shortName}`], (result) => {
+  return new Promise(resolve => {
+    chrome.storage.local.get([`golink_${shortName}`], result => {
       resolve(result[`golink_${shortName}`] || null);
     });
   });
@@ -109,10 +113,10 @@ async function saveGoLinkMapping(shortName, url, description = '') {
     url,
     description,
     createdAt: Date.now(),
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
   };
-  
-  return new Promise((resolve) => {
+
+  return new Promise(resolve => {
     chrome.storage.local.set({ [key]: mapping }, () => {
       resolve(mapping);
     });
@@ -123,8 +127,8 @@ async function saveGoLinkMapping(shortName, url, description = '') {
  * Get all go-link mappings
  */
 async function getAllGoLinkMappings() {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(null, (result) => {
+  return new Promise(resolve => {
+    chrome.storage.local.get(null, result => {
       const mappings = {};
       for (const [key, value] of Object.entries(result)) {
         if (key.startsWith('golink_')) {
@@ -142,7 +146,7 @@ async function getAllGoLinkMappings() {
  */
 async function deleteGoLinkMapping(shortName) {
   const key = `golink_${shortName}`;
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     chrome.storage.local.remove([key], () => {
       resolve();
     });
@@ -157,19 +161,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .then(sendResponse)
         .catch(error => sendResponse({ error: error.message }));
       return true; // Will respond asynchronously
-      
+
     case 'getMapping':
       getGoLinkMapping(request.shortName)
         .then(sendResponse)
         .catch(error => sendResponse({ error: error.message }));
       return true;
-      
+
     case 'getAllMappings':
       getAllGoLinkMappings()
         .then(sendResponse)
         .catch(error => sendResponse({ error: error.message }));
       return true;
-      
+
     case 'deleteMapping':
       deleteGoLinkMapping(request.shortName)
         .then(() => sendResponse({ success: true }))
@@ -181,15 +185,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Handle omnibox input (go xyz)
 chrome.omnibox.onInputEntered.addListener(async (text, disposition) => {
   const shortName = text.trim();
-  
+
   if (shortName) {
     try {
       const mapping = await getGoLinkMapping(shortName);
-      
+
       if (mapping && mapping.url) {
         // Navigate to the mapped URL
         console.log(`Navigating to go/${shortName} -> ${mapping.url}`);
-        
+
         if (disposition === 'currentTab') {
           chrome.tabs.update({ url: mapping.url });
         } else {
@@ -197,9 +201,13 @@ chrome.omnibox.onInputEntered.addListener(async (text, disposition) => {
         }
       } else {
         // No mapping found, redirect to create page
-        console.log(`No mapping found for go/${shortName}, redirecting to create page`);
-        const createUrl = chrome.runtime.getURL('create.html') + `?shortName=${encodeURIComponent(shortName)}`;
-        
+        console.log(
+          `No mapping found for go/${shortName}, redirecting to create page`
+        );
+        const createUrl =
+          chrome.runtime.getURL('create.html') +
+          `?shortName=${encodeURIComponent(shortName)}`;
+
         if (disposition === 'currentTab') {
           chrome.tabs.update({ url: createUrl });
         } else {
@@ -215,22 +223,25 @@ chrome.omnibox.onInputEntered.addListener(async (text, disposition) => {
 // Provide suggestions for omnibox
 chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
   const input = text.trim().toLowerCase();
-  
+
   if (input.length > 0) {
     try {
       const mappings = await getAllGoLinkMappings();
       const suggestions = [];
-      
+
       for (const [shortName, mapping] of Object.entries(mappings)) {
-        if (shortName.toLowerCase().includes(input) || 
-            (mapping.description && mapping.description.toLowerCase().includes(input))) {
+        if (
+          shortName.toLowerCase().includes(input) ||
+          (mapping.description &&
+            mapping.description.toLowerCase().includes(input))
+        ) {
           suggestions.push({
             content: shortName,
-            description: `${shortName} → ${mapping.url}${mapping.description ? ' - ' + mapping.description : ''}`
+            description: `${shortName} → ${mapping.url}${mapping.description ? ' - ' + mapping.description : ''}`,
           });
         }
       }
-      
+
       suggest(suggestions.slice(0, 5)); // Limit to 5 suggestions
     } catch (error) {
       console.error('Error getting omnibox suggestions:', error);
@@ -239,7 +250,7 @@ chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
 });
 
 // Handle extension installation
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener(details => {
   if (details.reason === 'install') {
     console.log('GoLinks extension installed');
     // Could show welcome page or setup instructions

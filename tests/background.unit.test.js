@@ -8,7 +8,7 @@ describe('Background Script Unit Tests', () => {
 
   beforeAll(() => {
     // Define the functions from background.js for testing
-    isGoLink = function(url) {
+    isGoLink = function (url) {
       if (!url) return false;
       // Check hostname for actual URL objects
       if (url.hostname === 'go') return true;
@@ -18,9 +18,9 @@ describe('Background Script Unit Tests', () => {
       return false;
     };
 
-    extractShortName = function(url) {
+    extractShortName = function (url) {
       let shortName = '';
-      
+
       if (url.hostname === 'go') {
         shortName = url.pathname.substring(1); // Remove leading slash
       } else if (url.href.startsWith('go/')) {
@@ -31,7 +31,7 @@ describe('Background Script Unit Tests', () => {
           shortName = match[1];
         }
       }
-      
+
       // Clean up any query parameters or fragments
       if (shortName.includes('?')) {
         shortName = shortName.split('?')[0];
@@ -39,29 +39,29 @@ describe('Background Script Unit Tests', () => {
       if (shortName.includes('#')) {
         shortName = shortName.split('#')[0];
       }
-      
+
       return shortName;
     };
 
-    getGoLinkMapping = async function(shortName) {
-      return new Promise((resolve) => {
-        chrome.storage.local.get([`golink_${shortName}`], (result) => {
+    getGoLinkMapping = async function (shortName) {
+      return new Promise(resolve => {
+        chrome.storage.local.get([`golink_${shortName}`], result => {
           resolve(result[`golink_${shortName}`] || null);
         });
       });
     };
 
-    saveGoLinkMapping = async function(shortName, url, description = '') {
+    saveGoLinkMapping = async function (shortName, url, description = '') {
       const key = `golink_${shortName}`;
       const mapping = {
         shortName,
         url,
         description,
         createdAt: Date.now(),
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       };
-      
-      return new Promise((resolve) => {
+
+      return new Promise(resolve => {
         chrome.storage.local.set({ [key]: mapping }, () => {
           resolve(mapping);
         });
@@ -142,16 +142,20 @@ describe('Background Script Unit Tests', () => {
 
     test('should save a go-link mapping', async () => {
       testHelpers.mockChromeStorageSet();
-      
-      const mapping = await saveGoLinkMapping('test', 'https://example.com', 'Test description');
-      
+
+      const mapping = await saveGoLinkMapping(
+        'test',
+        'https://example.com',
+        'Test description'
+      );
+
       expect(chrome.storage.local.set).toHaveBeenCalledWith(
         expect.objectContaining({
-          'golink_test': expect.objectContaining({
+          golink_test: expect.objectContaining({
             shortName: 'test',
             url: 'https://example.com',
-            description: 'Test description'
-          })
+            description: 'Test description',
+          }),
         }),
         expect.any(Function)
       );
@@ -160,20 +164,26 @@ describe('Background Script Unit Tests', () => {
     });
 
     test('should retrieve a go-link mapping', async () => {
-      const testMapping = testHelpers.createMockMapping('docs', 'https://docs.example.com');
-      testHelpers.mockChromeStorageGet({ 'golink_docs': testMapping });
-      
+      const testMapping = testHelpers.createMockMapping(
+        'docs',
+        'https://docs.example.com'
+      );
+      testHelpers.mockChromeStorageGet({ golink_docs: testMapping });
+
       const mapping = await getGoLinkMapping('docs');
-      
-      expect(chrome.storage.local.get).toHaveBeenCalledWith(['golink_docs'], expect.any(Function));
+
+      expect(chrome.storage.local.get).toHaveBeenCalledWith(
+        ['golink_docs'],
+        expect.any(Function)
+      );
       expect(mapping).toEqual(testMapping);
     });
 
     test('should return null for non-existent mapping', async () => {
       testHelpers.mockChromeStorageGet({});
-      
+
       const mapping = await getGoLinkMapping('nonexistent');
-      
+
       expect(mapping).toBe(null);
     });
   });

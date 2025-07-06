@@ -7,43 +7,43 @@ global.chrome = {
       get: jest.fn(),
       set: jest.fn(),
       remove: jest.fn(),
-      clear: jest.fn()
-    }
+      clear: jest.fn(),
+    },
   },
   runtime: {
     sendMessage: jest.fn(),
     onMessage: {
       addListener: jest.fn(),
-      removeListener: jest.fn()
+      removeListener: jest.fn(),
     },
     onInstalled: {
-      addListener: jest.fn()
+      addListener: jest.fn(),
     },
     getURL: jest.fn(path => `chrome-extension://test-id/${path}`),
-    lastError: null
+    lastError: null,
   },
   tabs: {
     create: jest.fn(),
     update: jest.fn(),
-    query: jest.fn()
+    query: jest.fn(),
   },
   webNavigation: {
     onBeforeNavigate: {
-      addListener: jest.fn()
-    }
+      addListener: jest.fn(),
+    },
   },
   action: {
     setPopup: jest.fn(),
-    setTitle: jest.fn()
+    setTitle: jest.fn(),
   },
   omnibox: {
     onInputEntered: {
-      addListener: jest.fn()
+      addListener: jest.fn(),
     },
     onInputChanged: {
-      addListener: jest.fn()
-    }
-  }
+      addListener: jest.fn(),
+    },
+  },
 };
 
 // Mock browser APIs for cross-browser compatibility
@@ -60,8 +60,8 @@ global.fetch = jest.fn();
 Object.assign(navigator, {
   clipboard: {
     writeText: jest.fn().mockResolvedValue(undefined),
-    readText: jest.fn().mockResolvedValue('')
-  }
+    readText: jest.fn().mockResolvedValue(''),
+  },
 });
 
 // Mock window methods
@@ -72,8 +72,8 @@ Object.assign(window, {
   history: {
     back: jest.fn(),
     forward: jest.fn(),
-    length: 1
-  }
+    length: 1,
+  },
 });
 
 // Setup fake timers for consistent testing
@@ -86,25 +86,26 @@ expect.extend({
       new URL(received);
       return {
         message: () => `expected ${received} not to be a valid URL`,
-        pass: true
+        pass: true,
       };
     } catch {
       return {
         message: () => `expected ${received} to be a valid URL`,
-        pass: false
+        pass: false,
       };
     }
   },
-  
+
   toBeValidShortName(received) {
     const isValid = /^[a-zA-Z0-9-_]+$/.test(received);
     return {
-      message: () => isValid 
-        ? `expected ${received} not to be a valid short name`
-        : `expected ${received} to be a valid short name (letters, numbers, hyphens, underscores only)`,
-      pass: isValid
+      message: () =>
+        isValid
+          ? `expected ${received} not to be a valid short name`
+          : `expected ${received} to be a valid short name (letters, numbers, hyphens, underscores only)`,
+      pass: isValid,
     };
-  }
+  },
 });
 
 // Console override for cleaner test output
@@ -115,14 +116,14 @@ global.console = {
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 };
 
 // Cleanup function
 afterEach(() => {
   jest.clearAllMocks();
   jest.clearAllTimers();
-  
+
   // Reset Chrome API mocks
   chrome.storage.local.get.mockClear();
   chrome.storage.local.set.mockClear();
@@ -136,21 +137,25 @@ afterEach(() => {
 
 // Helper functions for tests
 global.testHelpers = {
-  createMockMapping: (shortName = 'test', url = 'https://example.com', description = 'Test mapping') => ({
+  createMockMapping: (
+    shortName = 'test',
+    url = 'https://example.com',
+    description = 'Test mapping'
+  ) => ({
     shortName,
     url,
     description,
     createdAt: Date.now(),
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
   }),
-  
-  mockChromeStorageGet: (data) => {
+
+  mockChromeStorageGet: data => {
     chrome.storage.local.get.mockImplementation((keys, callback) => {
       if (typeof keys === 'function') {
         callback = keys;
         keys = null;
       }
-      
+
       if (keys === null) {
         callback(data);
       } else if (Array.isArray(keys)) {
@@ -176,26 +181,26 @@ global.testHelpers = {
       }
     });
   },
-  
+
   mockChromeStorageSet: () => {
     chrome.storage.local.set.mockImplementation((data, callback) => {
       if (callback) callback();
     });
   },
-  
-  mockChromeRuntimeSendMessage: (response) => {
+
+  mockChromeRuntimeSendMessage: response => {
     chrome.runtime.sendMessage.mockImplementation((message, callback) => {
       if (callback) callback(response);
     });
   },
-  
-  simulateStorageChange: (changes) => {
+
+  simulateStorageChange: changes => {
     // Simulate storage change events
     const listeners = chrome.storage.onChanged?._listeners || [];
     listeners.forEach(listener => {
       listener(changes, 'local');
     });
-  }
+  },
 };
 
 // Add custom error types for extension testing

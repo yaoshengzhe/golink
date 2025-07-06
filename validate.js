@@ -36,9 +36,9 @@ class ExtensionValidator {
    */
   validateManifest() {
     this.log('Validating manifest.json...');
-    
+
     const manifestPath = path.join(__dirname, 'manifest.json');
-    
+
     if (!fs.existsSync(manifestPath)) {
       this.error('manifest.json not found');
       return false;
@@ -51,11 +51,11 @@ class ExtensionValidator {
       // Check required fields
       const requiredFields = [
         'manifest_version',
-        'name', 
+        'name',
         'version',
         'description',
         'permissions',
-        'background'
+        'background',
       ];
 
       for (const field of requiredFields) {
@@ -108,18 +108,14 @@ class ExtensionValidator {
    */
   validateJavaScript() {
     this.log('Validating JavaScript files...');
-    
-    const jsFiles = [
-      'background.js',
-      'create.js', 
-      'popup.js'
-    ];
+
+    const jsFiles = ['background.js', 'create.js', 'popup.js'];
 
     let allValid = true;
 
     for (const file of jsFiles) {
       const filePath = path.join(__dirname, file);
-      
+
       if (!fs.existsSync(filePath)) {
         this.error(`JavaScript file not found: ${file}`);
         allValid = false;
@@ -128,13 +124,12 @@ class ExtensionValidator {
 
       try {
         const content = fs.readFileSync(filePath, 'utf8');
-        
+
         // Basic syntax validation
         this.validateJSSyntax(content, file);
-        
+
         // Check for common issues
         this.checkJSBestPractices(content, file);
-        
       } catch (error) {
         this.error(`Error reading ${file}: ${error.message}`);
         allValid = false;
@@ -144,7 +139,7 @@ class ExtensionValidator {
     if (allValid) {
       this.success('JavaScript validation passed');
     }
-    
+
     return allValid;
   }
 
@@ -154,26 +149,36 @@ class ExtensionValidator {
   validateJSSyntax(content, filename) {
     // Check for basic syntax issues
     const lines = content.split('\n');
-    
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const lineNum = i + 1;
-      
+
       // Check for console.log in production (warning only)
       if (line.includes('console.log') && !line.includes('//')) {
-        this.warning(`Console.log found in ${filename}:${lineNum} - consider removing for production`);
+        this.warning(
+          `Console.log found in ${filename}:${lineNum} - consider removing for production`
+        );
       }
-      
+
       // Check for eval usage (security risk)
       if (line.includes('eval(')) {
-        this.error(`eval() usage found in ${filename}:${lineNum} - security risk`);
+        this.error(
+          `eval() usage found in ${filename}:${lineNum} - security risk`
+        );
       }
-      
+
       // Check for proper chrome API usage
-      if (line.includes('chrome.') && !line.includes('chrome.runtime') && 
-          !line.includes('chrome.storage') && !line.includes('chrome.tabs') && 
-          !line.includes('chrome.webNavigation')) {
-        this.warning(`Uncommon chrome API usage in ${filename}:${lineNum}: ${line.trim()}`);
+      if (
+        line.includes('chrome.') &&
+        !line.includes('chrome.runtime') &&
+        !line.includes('chrome.storage') &&
+        !line.includes('chrome.tabs') &&
+        !line.includes('chrome.webNavigation')
+      ) {
+        this.warning(
+          `Uncommon chrome API usage in ${filename}:${lineNum}: ${line.trim()}`
+        );
       }
     }
   }
@@ -183,18 +188,34 @@ class ExtensionValidator {
    */
   checkJSBestPractices(content, filename) {
     // Check for proper error handling
-    if (content.includes('chrome.runtime.sendMessage') && !content.includes('chrome.runtime.lastError')) {
-      this.warning(`${filename}: Consider checking chrome.runtime.lastError in message callbacks`);
+    if (
+      content.includes('chrome.runtime.sendMessage') &&
+      !content.includes('chrome.runtime.lastError')
+    ) {
+      this.warning(
+        `${filename}: Consider checking chrome.runtime.lastError in message callbacks`
+      );
     }
-    
+
     // Check for storage operations with error handling
-    if (content.includes('chrome.storage') && !content.includes('chrome.runtime.lastError')) {
-      this.warning(`${filename}: Consider error handling for storage operations`);
+    if (
+      content.includes('chrome.storage') &&
+      !content.includes('chrome.runtime.lastError')
+    ) {
+      this.warning(
+        `${filename}: Consider error handling for storage operations`
+      );
     }
-    
+
     // Check for proper async/await or Promise usage
-    if (content.includes('chrome.storage.local.get') && !content.includes('Promise') && !content.includes('callback')) {
-      this.warning(`${filename}: Storage operations should use proper async patterns`);
+    if (
+      content.includes('chrome.storage.local.get') &&
+      !content.includes('Promise') &&
+      !content.includes('callback')
+    ) {
+      this.warning(
+        `${filename}: Storage operations should use proper async patterns`
+      );
     }
   }
 
@@ -203,17 +224,14 @@ class ExtensionValidator {
    */
   validateHTML() {
     this.log('Validating HTML files...');
-    
-    const htmlFiles = [
-      'create.html',
-      'popup.html'
-    ];
+
+    const htmlFiles = ['create.html', 'popup.html'];
 
     let allValid = true;
 
     for (const file of htmlFiles) {
       const filePath = path.join(__dirname, file);
-      
+
       if (!fs.existsSync(filePath)) {
         this.error(`HTML file not found: ${file}`);
         allValid = false;
@@ -232,7 +250,7 @@ class ExtensionValidator {
     if (allValid) {
       this.success('HTML validation passed');
     }
-    
+
     return allValid;
   }
 
@@ -244,34 +262,44 @@ class ExtensionValidator {
     if (!content.includes('<meta charset="UTF-8">')) {
       this.warning(`${filename}: Missing UTF-8 charset declaration`);
     }
-    
+
     if (!content.includes('viewport')) {
       this.warning(`${filename}: Missing viewport meta tag`);
     }
-    
+
     // Check for proper script loading
-    if (content.includes('<script') && !content.includes('defer') && !content.includes('async')) {
-      this.warning(`${filename}: Consider using defer or async for script loading`);
+    if (
+      content.includes('<script') &&
+      !content.includes('defer') &&
+      !content.includes('async')
+    ) {
+      this.warning(
+        `${filename}: Consider using defer or async for script loading`
+      );
     }
-    
+
     // Check for inline scripts (CSP violation)
     if (content.includes('<script>') && !content.includes('src=')) {
       this.error(`${filename}: Inline scripts violate Content Security Policy`);
     }
-    
+
     // Check for inline styles (CSP violation)
     if (content.includes('style=')) {
-      this.warning(`${filename}: Inline styles may violate Content Security Policy`);
+      this.warning(
+        `${filename}: Inline styles may violate Content Security Policy`
+      );
     }
-    
+
     // Check for proper form validation
     if (content.includes('<form') && !content.includes('novalidate')) {
       // This is actually good - HTML5 validation should be enabled
     }
-    
+
     // Check for accessibility
     if (content.includes('<input') && !content.includes('label')) {
-      this.warning(`${filename}: Form inputs should have associated labels for accessibility`);
+      this.warning(
+        `${filename}: Form inputs should have associated labels for accessibility`
+      );
     }
   }
 
@@ -280,9 +308,9 @@ class ExtensionValidator {
    */
   validateCSS() {
     this.log('Validating CSS files...');
-    
+
     const cssPath = path.join(__dirname, 'styles.css');
-    
+
     if (!fs.existsSync(cssPath)) {
       this.error('styles.css not found');
       return false;
@@ -290,22 +318,30 @@ class ExtensionValidator {
 
     try {
       const content = fs.readFileSync(cssPath, 'utf8');
-      
+
       // Basic CSS validation
-      const braceCount = (content.match(/\{/g) || []).length - (content.match(/\}/g) || []).length;
+      const braceCount =
+        (content.match(/\{/g) || []).length -
+        (content.match(/\}/g) || []).length;
       if (braceCount !== 0) {
         this.error('CSS: Mismatched braces detected');
       }
-      
+
       // Check for vendor prefixes without standard property
       const lines = content.split('\n');
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        if (line.startsWith('-webkit-') || line.startsWith('-moz-') || line.startsWith('-ms-')) {
-          this.warning(`CSS line ${i + 1}: Vendor prefix found, ensure standard property is also included`);
+        if (
+          line.startsWith('-webkit-') ||
+          line.startsWith('-moz-') ||
+          line.startsWith('-ms-')
+        ) {
+          this.warning(
+            `CSS line ${i + 1}: Vendor prefix found, ensure standard property is also included`
+          );
         }
       }
-      
+
       this.success('CSS validation passed');
       return true;
     } catch (error) {
@@ -319,7 +355,7 @@ class ExtensionValidator {
    */
   validateFileStructure() {
     this.log('Validating file structure...');
-    
+
     const requiredFiles = [
       'manifest.json',
       'background.js',
@@ -328,7 +364,7 @@ class ExtensionValidator {
       'popup.html',
       'popup.js',
       'styles.css',
-      'README.md'
+      'README.md',
     ];
 
     let allPresent = true;
@@ -342,10 +378,7 @@ class ExtensionValidator {
     }
 
     // Check for recommended files
-    const recommendedFiles = [
-      'package.json',
-      '.gitignore'
-    ];
+    const recommendedFiles = ['package.json', '.gitignore'];
 
     for (const file of recommendedFiles) {
       const filePath = path.join(__dirname, file);
@@ -357,7 +390,7 @@ class ExtensionValidator {
     if (allPresent) {
       this.success('File structure validation passed');
     }
-    
+
     return allPresent;
   }
 
@@ -366,36 +399,40 @@ class ExtensionValidator {
    */
   validateSecurity() {
     this.log('Validating security practices...');
-    
+
     const jsFiles = ['background.js', 'create.js', 'popup.js'];
     let secure = true;
 
     for (const file of jsFiles) {
       const filePath = path.join(__dirname, file);
       if (!fs.existsSync(filePath)) continue;
-      
+
       const content = fs.readFileSync(filePath, 'utf8');
-      
+
       // Check for dangerous functions
       const dangerousFunctions = ['eval', 'innerHTML', 'document.write'];
       for (const func of dangerousFunctions) {
         if (content.includes(func)) {
-          this.error(`Security: Potentially dangerous function '${func}' found in ${file}`);
+          this.error(
+            `Security: Potentially dangerous function '${func}' found in ${file}`
+          );
           secure = false;
         }
       }
-      
+
       // Check for hardcoded credentials/secrets
       const sensitivePatterns = [
         /password\s*=\s*['"]/i,
         /api[_-]?key\s*=\s*['"]/i,
         /secret\s*=\s*['"]/i,
-        /token\s*=\s*['"]/i
+        /token\s*=\s*['"]/i,
       ];
-      
+
       for (const pattern of sensitivePatterns) {
         if (pattern.test(content)) {
-          this.error(`Security: Potential hardcoded credential found in ${file}`);
+          this.error(
+            `Security: Potential hardcoded credential found in ${file}`
+          );
           secure = false;
         }
       }
@@ -404,7 +441,7 @@ class ExtensionValidator {
     if (secure) {
       this.success('Security validation passed');
     }
-    
+
     return secure;
   }
 
@@ -413,18 +450,18 @@ class ExtensionValidator {
    */
   validateAll() {
     this.log('Starting GoLinks extension validation...');
-    
+
     const validations = [
       () => this.validateFileStructure(),
       () => this.validateManifest(),
       () => this.validateJavaScript(),
       () => this.validateHTML(),
       () => this.validateCSS(),
-      () => this.validateSecurity()
+      () => this.validateSecurity(),
     ];
 
     let allPassed = true;
-    
+
     for (const validation of validations) {
       if (!validation()) {
         allPassed = false;
@@ -435,17 +472,17 @@ class ExtensionValidator {
     console.log('\n' + '='.repeat(50));
     console.log('VALIDATION SUMMARY');
     console.log('='.repeat(50));
-    
+
     if (this.errors.length > 0) {
       console.log(`❌ ${this.errors.length} error(s) found:`);
       this.errors.forEach(error => console.log(`   • ${error}`));
     }
-    
+
     if (this.warnings.length > 0) {
       console.log(`⚠️  ${this.warnings.length} warning(s) found:`);
       this.warnings.forEach(warning => console.log(`   • ${warning}`));
     }
-    
+
     if (allPassed && this.errors.length === 0) {
       console.log('✅ All validations passed!');
       process.exit(0);
