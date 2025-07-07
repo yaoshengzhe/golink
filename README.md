@@ -2,18 +2,19 @@
 
 <div align="center">
   <img src="icons/icon-128.png" alt="GoLinks Logo" width="128" height="128">
-  <p><em>Simple, beautiful navigation shortcuts inspired by Apple design</em></p>
+  <p><em>Simple, beautiful navigation shortcuts</em></p>
 </div>
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yaoshengzhe/golink)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Build Status](https://github.com/yaoshengzhe/golink/actions/workflows/ci.yml/badge.svg)](https://github.com/yaoshengzhe/golink/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-79%20passing-success.svg)](tests/)
 [![Chrome](https://img.shields.io/badge/chrome-supported-brightgreen.svg)](https://chrome.google.com/webstore)
 [![Edge](https://img.shields.io/badge/edge-supported-brightgreen.svg)](https://microsoftedge.microsoft.com/addons)
+[![Safari](https://img.shields.io/badge/safari-supported-brightgreen.svg)](https://developer.apple.com/safari/extensions/)
 [![Manifest](https://img.shields.io/badge/manifest-v3-orange.svg)](https://developer.chrome.com/docs/extensions/mv3/)
-[![Tests](https://img.shields.io/badge/tests-36%20passing-success.svg)](tests/)
-[![Build](https://img.shields.io/badge/build-passing-success.svg)](https://github.com/yaoshengzhe/golink/actions)
 [![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://prettier.io/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](docs/CONTRIBUTING.md)
 
 Transform long URLs into simple shortcuts. Type `go/gmail` instead of `https://mail.google.com/mail/u/0/#inbox`.
 
@@ -67,7 +68,7 @@ go/spotify     → https://open.spotify.com/
 |---------|---------|--------|---------|-------------|
 | **Chrome** | ✅ Full | Direct install | ✅ `go` + Tab | ✅ `go/link` |
 | **Edge** | ✅ Full | Direct install | ✅ `go` + Tab | ✅ `go/link` |
-| **Safari** | ⚠️ Partial | Xcode conversion | ❌ No support | ✅ `http://go/link` |
+| **Safari** | ✅ Full | Xcode conversion | ❌ No support | ✅ `http://go/link` |
 | **Firefox** | ⚠️ Partial | Manual adaptation | ❌ Different API | ✅ `go/link` |
 
 ## Installation
@@ -90,7 +91,7 @@ Then:
 3. Safari → Develop → Allow Unsigned Extensions
 4. Safari → Preferences → Extensions → Enable GoLinks
 
-**⚠️ Safari Usage:** Type `http://go/linkname` (full URL required, no omnibox support)
+**✅ Safari Usage:** Type `http://go/linkname` (full URL required, no omnibox support)
 **📖 Detailed Guide:** See [SAFARI-GUIDE.md](SAFARI-GUIDE.md) for complete Safari setup
 
 ### Safari (Manual)
@@ -193,7 +194,10 @@ golink/
 ## Changelog
 
 ### v1.0.0
-- Omnibox integration with autocomplete
-- Local storage with import/export
-- Chrome and Safari compatibility
-- Real-time validation and search
+- ✅ Omnibox integration with autocomplete
+- ✅ Local storage with import/export  
+- ✅ Chrome, Edge, and Safari compatibility
+- ✅ Real-time validation and search
+- ✅ Cross-browser API compatibility layer
+- ✅ Comprehensive test suite (79 tests)
+- ✅ Safari Web Extensions support

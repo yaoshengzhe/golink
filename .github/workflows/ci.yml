@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Build
 
 on:
   push:
@@ -10,26 +10,26 @@ jobs:
   validate:
     name: Validate Extension
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
-        
+
     - name: Install dependencies
       run: npm ci
-      
+
     - name: Run validation
       run: npm run validate
-      
+
     - name: Check formatting
       run: npm run format:check
-      
+
     - name: Run linter
       run: npm run lint
 
@@ -37,27 +37,27 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     needs: validate
-    
+
     strategy:
       matrix:
         node-version: [18, 20]
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        
+
     - name: Install dependencies
       run: npm ci
-      
+
     - name: Run unit tests
       run: npm run test:unit
-      
+
     - name: Run tests with coverage
       if: matrix.node-version == 18
       run: npm run test:coverage
@@ -66,20 +66,20 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     needs: validate
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
-        
+
     - name: Install dependencies
       run: npm ci
-      
+
     - name: Run security audit
       run: npm audit --audit-level=moderate || true
 
@@ -87,23 +87,23 @@ jobs:
     name: Extension Integration Tests
     runs-on: ubuntu-latest
     needs: [validate, test]
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
-        
+
     - name: Install dependencies
       run: npm ci
-      
+
     - name: Install Chrome
       uses: browser-actions/setup-chrome@latest
-      
+
     - name: Run integration tests
       run: npm run test:integration || echo "Integration tests failed but continuing build"
       env:
@@ -113,32 +113,32 @@ jobs:
     name: Build Extension
     runs-on: ubuntu-latest
     needs: [validate, test, security]
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
-        
+
     - name: Install dependencies
       run: npm ci
-      
+
     - name: Build extension
       run: npm run build
-      
+
     - name: Create extension package
       run: npm run zip
-      
+
     - name: Upload extension package
       uses: actions/upload-artifact@v4
       with:
         name: golinks-extension
         path: golinks-extension.zip
-        
+
     - name: Generate build report
       run: |
         echo "## Build Report" > build-report.md
@@ -149,7 +149,7 @@ jobs:
         if [ -f golinks-extension.zip ]; then
           echo "- **Package Size**: $(ls -lh golinks-extension.zip | awk '{print $5}')" >> build-report.md
         fi
-        
+
     - name: Upload build report
       uses: actions/upload-artifact@v4
       with:
@@ -161,22 +161,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     if: startsWith(github.ref, 'refs/tags/')
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Download extension package
       uses: actions/download-artifact@v4
       with:
         name: golinks-extension
-        
+
     - name: Extract version from manifest
       id: version
       run: |
         VERSION=$(node -p "require('./manifest.json').version")
         echo "version=$VERSION" >> $GITHUB_OUTPUT
-        
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
@@ -184,15 +184,15 @@ jobs:
         name: GoLinks Extension ${{ github.ref_name }}
         body: |
           ## GoLinks Extension ${{ github.ref_name }}
-          
+
           ### Installation
           1. Download the `golinks-extension.zip` file
           2. Extract the contents
           3. Load the extension in Chrome via "Load unpacked"
-          
+
           ### Changes
           See the commit history for detailed changes.
-          
+
         files: |
           golinks-extension.zip
         draft: false
@@ -203,14 +203,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: [validate, test, security, build]
     if: always()
-    
+
     steps:
     - name: Notify Success
       if: ${{ needs.validate.result == 'success' && needs.test.result == 'success' && needs.security.result == 'success' && needs.build.result == 'success' }}
       run: |
         echo "✅ All checks passed successfully!"
         echo "Extension is ready for deployment."
-        
+
     - name: Notify Failure
       if: ${{ needs.validate.result == 'failure' || needs.test.result == 'failure' || needs.security.result == 'failure' || needs.build.result == 'failure' }}
       run: |

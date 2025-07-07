@@ -7,18 +7,18 @@ global.TextDecoder = TextDecoder;
 
 // Mock console methods to avoid spam in tests
 global.console = {
-    log: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn()
+  log: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn(),
+  debug: jest.fn(),
 };
 
 // Mock browser APIs that might be used in tests
 global.navigator = {
-    clipboard: {
-        writeText: jest.fn().mockResolvedValue(undefined)
-    }
+  clipboard: {
+    writeText: jest.fn().mockResolvedValue(undefined),
+  },
 };
 
 // Set up default timeouts
@@ -26,7 +26,7 @@ jest.setTimeout(10000);
 
 // Mock URL constructor for older Node versions
 if (!global.URL) {
-    global.URL = require('url').URL;
+  global.URL = require('url').URL;
 }
 
 // Mock fetch if needed
@@ -34,5 +34,5 @@ global.fetch = jest.fn();
 
 // Clean up after each test
 afterEach(() => {
-    jest.clearAllMocks();
+  jest.clearAllMocks();
 });

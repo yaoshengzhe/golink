@@ -129,30 +129,51 @@ afterEach(() => {
 
   // Reset Chrome API mocks if they exist
   if (global.chrome && global.chrome.storage && global.chrome.storage.local) {
-    if (global.chrome.storage.local.get && typeof global.chrome.storage.local.get.mockClear === 'function') {
+    if (
+      global.chrome.storage.local.get &&
+      typeof global.chrome.storage.local.get.mockClear === 'function'
+    ) {
       global.chrome.storage.local.get.mockClear();
     }
-    if (global.chrome.storage.local.set && typeof global.chrome.storage.local.set.mockClear === 'function') {
+    if (
+      global.chrome.storage.local.set &&
+      typeof global.chrome.storage.local.set.mockClear === 'function'
+    ) {
       global.chrome.storage.local.set.mockClear();
     }
-    if (global.chrome.storage.local.remove && typeof global.chrome.storage.local.remove.mockClear === 'function') {
+    if (
+      global.chrome.storage.local.remove &&
+      typeof global.chrome.storage.local.remove.mockClear === 'function'
+    ) {
       global.chrome.storage.local.remove.mockClear();
     }
-    if (global.chrome.storage.local.clear && typeof global.chrome.storage.local.clear.mockClear === 'function') {
+    if (
+      global.chrome.storage.local.clear &&
+      typeof global.chrome.storage.local.clear.mockClear === 'function'
+    ) {
       global.chrome.storage.local.clear.mockClear();
     }
   }
   if (global.chrome && global.chrome.runtime) {
-    if (global.chrome.runtime.sendMessage && typeof global.chrome.runtime.sendMessage.mockClear === 'function') {
+    if (
+      global.chrome.runtime.sendMessage &&
+      typeof global.chrome.runtime.sendMessage.mockClear === 'function'
+    ) {
       global.chrome.runtime.sendMessage.mockClear();
     }
     global.chrome.runtime.lastError = null;
   }
   if (global.chrome && global.chrome.tabs) {
-    if (global.chrome.tabs.create && typeof global.chrome.tabs.create.mockClear === 'function') {
+    if (
+      global.chrome.tabs.create &&
+      typeof global.chrome.tabs.create.mockClear === 'function'
+    ) {
       global.chrome.tabs.create.mockClear();
     }
-    if (global.chrome.tabs.update && typeof global.chrome.tabs.update.mockClear === 'function') {
+    if (
+      global.chrome.tabs.update &&
+      typeof global.chrome.tabs.update.mockClear === 'function'
+    ) {
       global.chrome.tabs.update.mockClear();
     }
   }

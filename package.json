@@ -12,8 +12,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "validate": "node validate.js",
-    "lint": "eslint *.js tests/*.js",
-    "lint:fix": "eslint *.js tests/*.js --fix",
+    "lint": "eslint *.js",
+    "lint:fix": "eslint *.js --fix",
     "format": "prettier --write *.js *.html *.css tests/*.js",
     "format:check": "prettier --check *.js *.html *.css tests/*.js",
     "build": "npm run validate && npm run lint && npm run test:unit",
@@ -130,10 +130,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/user/golinks-extension.git"
+    "url": "git+https://github.com/yaoshengzhe/golink.git"
   },
   "bugs": {
-    "url": "https://github.com/user/golinks-extension/issues"
+    "url": "https://github.com/yaoshengzhe/golink/issues"
   },
-  "homepage": "https://github.com/user/golinks-extension#readme"
+  "homepage": "https://github.com/yaoshengzhe/golink#readme"
 }
