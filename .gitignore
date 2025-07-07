@@ -78,6 +78,9 @@ web-ext-artifacts/
 safari-dist/
 safari-build/
 
+# Generated icons (keep PNG icons, exclude SVG sources)
+# icons/*.svg
+
 # Temporary files
 tmp/
 temp/

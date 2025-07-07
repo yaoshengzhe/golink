@@ -1,5 +1,10 @@
 # GoLinks Browser Extension
 
+<div align="center">
+  <img src="icons/icon-128.png" alt="GoLinks Logo" width="128" height="128">
+  <p><em>Simple, beautiful navigation shortcuts inspired by Apple design</em></p>
+</div>
+
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yaoshengzhe/golink)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Chrome](https://img.shields.io/badge/chrome-supported-brightgreen.svg)](https://chrome.google.com/webstore)

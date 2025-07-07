@@ -36,29 +36,26 @@ filesToCopy.forEach(file => {
   }
 });
 
-// Create placeholder icons (PNG format) 
-const iconSizes = [16, 48, 128];
-iconSizes.forEach(size => {
-  const iconPath = path.join(safariDir, `icon-${size}.png`);
-  // Create a simple SVG-to-PNG placeholder
-  const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <rect width="${size}" height="${size}" fill="#2563eb"/>
-    <text x="50%" y="50%" text-anchor="middle" dy="0.35em" fill="white" font-family="Arial, sans-serif" font-size="${Math.floor(size * 0.4)}" font-weight="bold">GO</text>
-  </svg>`;
-  
-  // Since we can't easily convert SVG to PNG in Node.js without dependencies,
-  // we'll create a simple base64 encoded PNG
-  const base64PNG = createSimplePNG(size);
-  fs.writeFileSync(iconPath, Buffer.from(base64PNG, 'base64'));
-  console.log(`✅ Created icon-${size}.png`);
-});
+// Copy icons directory
+const iconsSourceDir = path.join(sourceDir, 'icons');
+const iconsDestDir = path.join(safariDir, 'icons');
 
-function createSimplePNG(size) {
-  // This is a minimal PNG header + blue square (simplified)
-  // In a real implementation, you'd use a proper PNG library
-  const base64Data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAGA0VaS9gAAAABJRU5ErkJggg==';
-  return base64Data; // Simple 1x1 blue pixel PNG
+if (fs.existsSync(iconsSourceDir)) {
+  if (!fs.existsSync(iconsDestDir)) {
+    fs.mkdirSync(iconsDestDir);
+  }
+  
+  const iconFiles = fs.readdirSync(iconsSourceDir).filter(file => file.endsWith('.png'));
+  iconFiles.forEach(file => {
+    const srcPath = path.join(iconsSourceDir, file);
+    const destPath = path.join(iconsDestDir, file);
+    fs.copyFileSync(srcPath, destPath);
+    console.log(`✅ Copied icons/${file}`);
+  });
+} else {
+  console.log('⚠️  Icons directory not found, run: npm run icons:generate');
 }
+
 
 // Copy Safari manifest
 const safariManifestPath = path.join(__dirname, 'safari-manifest.json');
