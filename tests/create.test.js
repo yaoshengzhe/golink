@@ -1,5 +1,3 @@
-// Tests for create.html and create.js functionality
-
 const { setupExtensionTest, cleanupExtensionTest } = require('./test-helpers');
 
 describe('Create Page', () => {

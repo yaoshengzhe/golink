@@ -1,5 +1,3 @@
-// Unit tests for omnibox functionality
-// These tests run without Puppeteer using mocked Chrome APIs
 /* global testHelpers */
 
 describe('Omnibox Unit Tests', () => {

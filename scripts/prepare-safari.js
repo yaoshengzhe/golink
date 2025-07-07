@@ -78,10 +78,13 @@ const backgroundPath = path.join(safariDir, 'background.js');
 const safariBackgroundScript = `// Safari Web Extension - GoLinks Background Script
 console.log('GoLinks Safari Extension loaded');
 
+// Cross-browser API compatibility
+const extensionAPI = (typeof browser !== 'undefined') ? browser : chrome;
+
 // Storage helper functions
 async function getGoLinkMapping(shortName) {
   return new Promise(resolve => {
-    chrome.storage.local.get([\`golink_\${shortName}\`], result => {
+    extensionAPI.storage.local.get([\`golink_\${shortName}\`], result => {
       resolve(result[\`golink_\${shortName}\`] || null);
     });
   });
@@ -98,7 +101,7 @@ async function saveGoLinkMapping(shortName, url, description = '') {
   };
 
   return new Promise(resolve => {
-    chrome.storage.local.set({ [key]: mapping }, () => {
+    extensionAPI.storage.local.set({ [key]: mapping }, () => {
       resolve(mapping);
     });
   });
@@ -106,7 +109,7 @@ async function saveGoLinkMapping(shortName, url, description = '') {
 
 async function getAllGoLinkMappings() {
   return new Promise(resolve => {
-    chrome.storage.local.get(null, result => {
+    extensionAPI.storage.local.get(null, result => {
       const mappings = {};
       for (const [key, value] of Object.entries(result)) {
         if (key.startsWith('golink_')) {
@@ -122,22 +125,22 @@ async function getAllGoLinkMappings() {
 async function deleteGoLinkMapping(shortName) {
   const key = \`golink_\${shortName}\`;
   return new Promise(resolve => {
-    chrome.storage.local.remove([key], () => {
+    extensionAPI.storage.local.remove([key], () => {
       resolve();
     });
   });
 }
 
 // Handle extension icon clicks (since popup doesn't work properly in Safari)
-chrome.browserAction.onClicked.addListener((tab) => {
+extensionAPI.browserAction.onClicked.addListener((tab) => {
   console.log('Safari: Extension icon clicked');
-  chrome.tabs.create({
-    url: chrome.runtime.getURL('create.html')
+  extensionAPI.tabs.create({
+    url: extensionAPI.runtime.getURL('create.html')
   });
 });
 
 // Safari approach: Listen for tab updates and check URL
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+extensionAPI.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === 'loading' && tab.url) {
     try {
       const url = new URL(tab.url);
@@ -153,12 +156,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         
         if (mapping && mapping.url) {
           console.log(\`Safari: Redirecting go/\${shortName} to \${mapping.url}\`);
-          chrome.tabs.update(tabId, { url: mapping.url });
+          extensionAPI.tabs.update(tabId, { url: mapping.url });
         } else {
           console.log(\`Safari: No mapping found for \${shortName}, showing create page\`);
-          const createUrl = chrome.runtime.getURL('create.html') + 
+          const createUrl = extensionAPI.runtime.getURL('create.html') + 
                            \`?shortName=\${encodeURIComponent(shortName)}\`;
-          chrome.tabs.update(tabId, { url: createUrl });
+          extensionAPI.tabs.update(tabId, { url: createUrl });
         }
       }
     } catch (error) {
@@ -168,7 +171,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 // Message handler for popup communication
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+extensionAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case 'saveMapping':
       saveGoLinkMapping(request.shortName, request.url, request.description)

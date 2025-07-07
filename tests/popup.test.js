@@ -1,5 +1,3 @@
-// Tests for popup.html and popup.js functionality
-
 const { setupExtensionTest, cleanupExtensionTest } = require('./test-helpers');
 
 describe('Popup', () => {

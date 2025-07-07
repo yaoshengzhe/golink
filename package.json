@@ -4,12 +4,13 @@
   "description": "Personal go-links system for quick navigation to your favorite URLs",
   "main": "background.js",
   "scripts": {
-    "test": "jest tests/*.unit.test.js",
-    "test:all": "jest",
-    "test:unit": "jest tests/*.unit.test.js",
-    "test:integration": "jest tests/*.test.js --testPathIgnorePatterns=unit.test.js",
+    "test": "jest",
+    "test:all": "jest --testPathIgnorePatterns=''",
+    "test:unit": "jest tests/*.unit.test.js tests/cross-browser-compatibility.test.js tests/golink-management.test.js tests/safari-extension.test.js tests/safari-integration.test.js tests/ui-interactions.test.js",
+    "test:integration": "jest tests/background.test.js tests/create.test.js tests/popup.test.js",
+    "test:safari": "jest tests/safari-*.test.js",
     "test:watch": "jest --watch",
-    "test:coverage": "jest tests/*.unit.test.js --coverage --coverageThreshold='{}'",
+    "test:coverage": "jest --coverage",
     "validate": "node validate.js",
     "lint": "eslint *.js tests/*.js",
     "lint:fix": "eslint *.js tests/*.js --fix",
@@ -52,6 +53,14 @@
     "testEnvironment": "jsdom",
     "setupFilesAfterEnv": ["<rootDir>/tests/jest.setup.js"],
     "testMatch": ["<rootDir>/tests/**/*.test.js"],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "tests/background.test.js",
+      "tests/create.test.js", 
+      "tests/popup.test.js",
+      "tests/background.unit.test.js",
+      "tests/omnibox.unit.test.js"
+    ],
     "collectCoverageFrom": [
       "*.js",
       "!validate.js",

@@ -1,6 +1,3 @@
-// Tests for background.js functionality
-// These tests use Jest and puppeteer for extension testing
-
 const { setupExtensionTest, cleanupExtensionTest } = require('./test-helpers');
 
 describe('Background Script', () => {

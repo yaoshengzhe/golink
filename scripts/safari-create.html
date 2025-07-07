@@ -470,51 +470,22 @@
                 console.log('Sending message:', message);
                 console.log('Using API:', extensionAPI === window.browser ? 'browser' : 'chrome');
                 
-                // Detect Safari Web Extension context
-                const isSafari = window.browser && !window.chrome;
-                
-                if (isSafari) {
-                    // Safari Web Extensions require extension ID even for extension pages
-                    const extensionId = extensionAPI.runtime.id;
-                    console.log('Safari: Extension ID:', extensionId);
-                    
-                    if (!extensionId) {
-                        reject(new Error('Safari: Extension ID not available'));
-                        return;
-                    }
-                    
-                    try {
-                        extensionAPI.runtime.sendMessage(extensionId, message, (response) => {
-                            const lastError = extensionAPI.runtime.lastError;
-                            if (lastError) {
-                                console.error('Safari runtime error:', lastError);
-                                reject(new Error(lastError.message));
-                            } else {
-                                console.log('Safari received response:', response);
-                                resolve(response);
-                            }
-                        });
-                    } catch (error) {
-                        console.error('Safari sendMessage error:', error);
-                        reject(new Error('Safari sendMessage failed: ' + error.message));
-                    }
-                } else {
-                    // Chrome/Firefox style - no extension ID needed
-                    try {
-                        extensionAPI.runtime.sendMessage(message, (response) => {
-                            const lastError = extensionAPI.runtime.lastError;
-                            if (lastError) {
-                                console.error('Runtime error:', lastError);
-                                reject(new Error(lastError.message));
-                            } else {
-                                console.log('Received response:', response);
-                                resolve(response);
-                            }
-                        });
-                    } catch (error) {
-                        console.error('sendMessage error:', error);
-                        reject(new Error('Failed to send message: ' + error.message));
-                    }
+                // For Safari 18.x: Extension pages should NOT use extensionId when messaging to background
+                // Only webpage-to-extension communication requires extensionId
+                try {
+                    extensionAPI.runtime.sendMessage(message, (response) => {
+                        const lastError = extensionAPI.runtime.lastError;
+                        if (lastError) {
+                            console.error('Runtime error:', lastError);
+                            reject(new Error(lastError.message));
+                        } else {
+                            console.log('Received response:', response);
+                            resolve(response);
+                        }
+                    });
+                } catch (error) {
+                    console.error('sendMessage error:', error);
+                    reject(new Error('Failed to send message: ' + error.message));
                 }
             });
         }

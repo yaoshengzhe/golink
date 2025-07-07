@@ -1,5 +1,3 @@
-// Unit tests for background.js functionality
-// These tests run without Puppeteer using mocked Chrome APIs
 /* global testHelpers */
 
 describe('Background Script Unit Tests', () => {
