@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoLinks Manager</title>
+    <style>
+        body {
+            width: 350px;
+            height: 400px;
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fa;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            background: #007AFF;
+            color: white;
+        }
+        
+        .result {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            background: #f0f8ff;
+            border: 1px solid #007AFF;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔗 GoLinks Manager</h1>
+    
+    <button class="btn" onclick="testButton()">Test JavaScript</button>
+    <button class="btn" onclick="testExtensionAPI()">Test Extension API</button>
+    <button class="btn" onclick="createTestLink()">Create Test Link</button>
+    
+    <div id="result" class="result" style="display: none;"></div>
+    
+    <script>
+        function testButton() {
+            showResult('✅ JavaScript is working!');
+        }
+        
+        function testExtensionAPI() {
+            let apiStatus = [];
+            
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                apiStatus.push('✅ Chrome API available');
+            } else {
+                apiStatus.push('❌ Chrome API not available');
+            }
+            
+            if (typeof browser !== 'undefined' && browser.runtime) {
+                apiStatus.push('✅ Browser API available');
+            } else {
+                apiStatus.push('❌ Browser API not available');
+            }
+            
+            if (typeof safari !== 'undefined') {
+                apiStatus.push('✅ Safari API available');
+            } else {
+                apiStatus.push('❌ Safari API not available');
+            }
+            
+            showResult(apiStatus.join('<br>'));
+        }
+        
+        function createTestLink() {
+            if (typeof chrome === 'undefined' || !chrome.runtime) {
+                showResult('❌ Extension API not available');
+                return;
+            }
+            
+            chrome.runtime.sendMessage({
+                action: 'saveMapping',
+                shortName: 'test',
+                url: 'https://google.com',
+                description: 'Test link'
+            }, function(response) {
+                if (chrome.runtime.lastError) {
+                    showResult('❌ Error: ' + chrome.runtime.lastError.message);
+                } else if (response && response.error) {
+                    showResult('❌ Error: ' + response.error);
+                } else {
+                    showResult('✅ Test link created! Try: http://go/test');
+                }
+            });
+        }
+        
+        function showResult(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = message;
+        }
+        
+        // Test on load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('GoLinks Safari popup loaded');
+        });
+    </script>
+</body>
+</html>

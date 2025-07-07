@@ -8,22 +8,24 @@
     "storage",
     "tabs",
     "webNavigation",
+    "activeTab",
     "http://go/*",
     "https://go/*"
   ],
 
   "background": {
     "scripts": ["background.js"],
-    "persistent": false
+    "persistent": true
   },
   
   "browser_action": {
-    "default_popup": "popup.html",
     "default_title": "GoLinks Manager"
   },
   
   "web_accessible_resources": [
-    "create.html"
+    "create.html",
+    "popup.html",
+    "styles.css"
   ],
 
   "icons": {
@@ -32,5 +34,5 @@
     "128": "icons/icon-128.png"
   },
 
-  "content_security_policy": "script-src 'self'; object-src 'self';"
+  "content_security_policy": "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; object-src 'self';"
 }

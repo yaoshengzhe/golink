@@ -46,10 +46,39 @@ echo "✅ Safari extension project created successfully!"
 echo ""
 echo "📁 Project location: $BUILD_DIR/$APP_NAME"
 echo ""
-echo "🔧 Manual build steps:"
-echo "1. Open: $BUILD_DIR/$APP_NAME/$APP_NAME.xcodeproj"
-echo "2. In Xcode: Product → Build (⌘B)"
-echo "3. In Xcode: Product → Archive (optional, for distribution)"
+
+# Attempt to build the project using xcodebuild
+PROJECT_PATH="$BUILD_DIR/$APP_NAME/$APP_NAME.xcodeproj"
+if [ -f "$PROJECT_PATH/project.pbxproj" ]; then
+    echo "🔨 Building extension with xcodebuild..."
+    
+    # Change to the project directory
+    cd "$BUILD_DIR/$APP_NAME"
+    
+    # Build the project (use macOS scheme for Safari extension)
+    if xcodebuild -project "$APP_NAME.xcodeproj" -scheme "$APP_NAME (macOS)" -configuration Release build; then
+        echo "✅ Extension built successfully!"
+        echo ""
+        echo "📦 Built extension location:"
+        BUILT_EXTENSION=$(find . -name "*.appex" -type d | head -1)
+        if [ -n "$BUILT_EXTENSION" ]; then
+            echo "   $(pwd)/$BUILT_EXTENSION"
+        fi
+    else
+        echo "⚠️  Automated build failed. You can build manually:"
+        echo "1. Open: $PROJECT_PATH"
+        echo "2. In Xcode: Product → Build (⌘B)"
+    fi
+    
+    # Return to original directory
+    cd "$EXTENSION_DIR"
+else
+    echo "⚠️  Project file not found, skipping automated build"
+    echo "Manual build steps:"
+    echo "1. Open: $PROJECT_PATH"
+    echo "2. In Xcode: Product → Build (⌘B)"
+fi
+
 echo ""
 echo "🦎 Safari setup:"
 echo "1. Safari → Develop → Allow Unsigned Extensions"

@@ -35,14 +35,14 @@ Type `go` in the address bar, then Tab/Space, then your shortcut:
 | `go` → Tab → `drive` | Open your Google Drive |
 | `go` → Tab → `calendar` | Open your calendar |
 
-### Traditional URLs
+### Direct URLs
 Type directly in the address bar:
 
-| Input | Result |
-|-------|--------|
-| `go/gmail` | Navigate to your Gmail inbox |
-| `go/drive` | Open your Google Drive |
-| `go/calendar` | Open your calendar |
+| Browser | Input | Result |
+|---------|-------|--------|
+| **Chrome/Edge** | `go/gmail` | Navigate to your Gmail inbox |
+| **Safari** | `http://go/gmail` | Navigate to your Gmail inbox |
+| **All** | `http://go/drive` | Open your Google Drive |
 
 ### Real-World Examples
 
@@ -63,12 +63,12 @@ go/spotify     → https://open.spotify.com/
 
 ## Browser Compatibility
 
-| Browser | Support | Method | Notes |
-|---------|---------|--------|-------|
-| **Chrome** | ✅ Full | Direct install | Manifest V3, all features |
-| **Edge** | ✅ Full | Direct install | Chrome Web Store compatible |
-| **Safari** | ⚠️ Partial | Web Extension conversion | Requires Xcode conversion |
-| **Firefox** | ⚠️ Partial | Manual adaptation | Needs Manifest V2/V3 tweaks |
+| Browser | Support | Method | Omnibox | Direct URLs |
+|---------|---------|--------|---------|-------------|
+| **Chrome** | ✅ Full | Direct install | ✅ `go` + Tab | ✅ `go/link` |
+| **Edge** | ✅ Full | Direct install | ✅ `go` + Tab | ✅ `go/link` |
+| **Safari** | ⚠️ Partial | Xcode conversion | ❌ No support | ✅ `http://go/link` |
+| **Firefox** | ⚠️ Partial | Manual adaptation | ❌ Different API | ✅ `go/link` |
 
 ## Installation
 
@@ -89,6 +89,9 @@ Then:
 2. In Xcode: Product → Build (⌘B)
 3. Safari → Develop → Allow Unsigned Extensions
 4. Safari → Preferences → Extensions → Enable GoLinks
+
+**⚠️ Safari Usage:** Type `http://go/linkname` (full URL required, no omnibox support)
+**📖 Detailed Guide:** See [SAFARI-GUIDE.md](SAFARI-GUIDE.md) for complete Safari setup
 
 ### Safari (Manual)
 1. Download this repository
@@ -135,6 +138,20 @@ Click the extension icon to:
 - **Delete**: Remove unused shortcuts
 - **Export**: Download as JSON backup
 - **Import**: Restore from backup file
+
+## Testing Your Installation
+
+### Quick Test
+1. **Open**: [test.html](test.html) in your browser
+2. **Follow the setup instructions** on the test page
+3. **Try the test links** to verify everything works
+
+### Manual Test
+1. **Create a test link**: `test` → `https://google.com`
+2. **Try navigation**:
+   - **Chrome/Edge**: Type `go/test` 
+   - **Safari**: Type `http://go/test`
+3. **Should redirect** to Google
 
 ## Development
 

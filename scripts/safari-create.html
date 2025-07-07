@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoLinks Manager</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin: 16px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        
+        .input-with-prefix {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .prefix {
+            background: #f5f5f5;
+            padding: 12px;
+            border-right: 1px solid #ddd;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        input[type="text"], input[type="url"] {
+            flex: 1;
+            border: none;
+            padding: 12px;
+            font-size: 14px;
+            outline: none;
+        }
+        
+        .full-width {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 8px 8px 8px 0;
+        }
+        
+        .btn-primary {
+            background: #007AFF;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f1f3f4;
+            color: #333;
+            border: 1px solid #dadce0;
+        }
+        
+        .btn-danger {
+            background: #ff3b30;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .link-item {
+            padding: 16px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin: 12px 0;
+            background: #fafafa;
+        }
+        
+        .link-name {
+            font-weight: 600;
+            color: #007AFF;
+            margin-bottom: 4px;
+        }
+        
+        .link-url {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        
+        .link-description {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .link-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .link-actions .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            margin: 0;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            border-bottom-color: #007AFF;
+            color: #007AFF;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .safari-note {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 GoLinks Manager</h1>
+            <p>Create and manage your navigation shortcuts</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="create" style="cursor: pointer;">Create Link</div>
+            <div class="tab" data-tab="manage" style="cursor: pointer;">Manage Links</div>
+        </div>
+        
+        <div style="background: #fffacd; padding: 10px; margin: 10px 0; border-radius: 5px;">
+            <strong>Debug Info:</strong> 
+            <button onclick="alert('JavaScript is working!')">Test JS</button>
+            <button onclick="console.log('Console test'); alert('Check console for logs')">Test Console</button>
+        </div>
+
+        <!-- Create Tab -->
+        <div id="create-tab" class="tab-content active">
+            <div class="section">
+                <h3>Create New GoLink</h3>
+                <form id="createForm">
+                    <div class="form-group">
+                        <label for="shortName">Short Name:</label>
+                        <div class="input-with-prefix">
+                            <span class="prefix">go/</span>
+                            <input type="text" id="shortName" required pattern="[a-zA-Z0-9-_]+" 
+                                   placeholder="gmail" title="Only letters, numbers, hyphens, and underscores">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="targetUrl">Target URL:</label>
+                        <input type="url" id="targetUrl" required class="full-width"
+                               placeholder="https://mail.google.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description (optional):</label>
+                        <input type="text" id="description" maxlength="100" class="full-width"
+                               placeholder="My Gmail inbox">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Create GoLink</button>
+                </form>
+                
+                <div id="message" style="display: none;"></div>
+            </div>
+
+            <div class="safari-note">
+                <strong>Safari Usage:</strong> After creating a link, type <code>http://go/linkname</code> in Safari's address bar to navigate.
+            </div>
+        </div>
+
+        <!-- Manage Tab -->
+        <div id="manage-tab" class="tab-content">
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3>Your GoLinks</h3>
+                    <button class="btn btn-secondary" onclick="loadLinks()">🔄 Refresh</button>
+                </div>
+                
+                <div id="linksList">
+                    <div class="empty-state">Loading your links...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function showTab(tabName, clickedElement) {
+            console.log('Switching to tab:', tabName);
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            const targetTab = document.getElementById(tabName + '-tab');
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            
+            // Activate the clicked tab button
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            } else {
+                // Fallback: find the tab button by data-tab attribute
+                const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
+                if (targetButton) {
+                    targetButton.classList.add('active');
+                }
+            }
+            
+            // Load links when switching to manage tab
+            if (tabName === 'manage') {
+                console.log('Loading links for manage tab');
+                loadLinks();
+            }
+        }
+
+        // Create form handling
+        document.getElementById('createForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const shortName = document.getElementById('shortName').value.trim();
+            const targetUrl = document.getElementById('targetUrl').value.trim();
+            const description = document.getElementById('description').value.trim();
+            
+            if (!shortName || !targetUrl) {
+                showMessage('Please fill in both short name and target URL', 'error');
+                return;
+            }
+            
+            try {
+                const response = await sendMessage({
+                    action: 'saveMapping',
+                    shortName: shortName,
+                    url: targetUrl,
+                    description: description
+                });
+                
+                if (response.error) {
+                    showMessage('Error: ' + response.error, 'error');
+                } else {
+                    showMessage(`✅ Created! Now try typing: http://go/${shortName}`, 'success');
+                    document.getElementById('createForm').reset();
+                    
+                    // Refresh links list if manage tab is visible
+                    if (document.getElementById('manage-tab').classList.contains('active')) {
+                        loadLinks();
+                    }
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Load and display links
+        async function loadLinks() {
+            console.log('Loading links...');
+            const linksList = document.getElementById('linksList');
+            linksList.innerHTML = '<div class="empty-state">Loading your links...</div>';
+            
+            try {
+                // Check API availability first
+                const extensionAPI = window.chrome || window.browser || (window.safari && window.safari.extension);
+                console.log('Extension API available:', !!extensionAPI);
+                console.log('Runtime available:', !!(extensionAPI && extensionAPI.runtime));
+                
+                const mappings = await sendMessage({ action: 'getAllMappings' });
+                console.log('Received mappings:', mappings);
+                
+                if (!mappings || Object.keys(mappings).length === 0) {
+                    linksList.innerHTML = '<div class="empty-state">No GoLinks created yet.<br><a href="#" class="create-first-link">Create your first link</a></div>';
+                    
+                    // Add event listener for the create first link
+                    const createFirstLink = linksList.querySelector('.create-first-link');
+                    if (createFirstLink) {
+                        createFirstLink.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            showTab('create');
+                        });
+                    }
+                    return;
+                }
+                
+                const linksHtml = Object.entries(mappings)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([shortName, mapping]) => createLinkHtml(shortName, mapping))
+                    .join('');
+                
+                linksList.innerHTML = linksHtml;
+                console.log('Links loaded successfully');
+            } catch (error) {
+                console.error('Error loading links:', error);
+                linksList.innerHTML = '<div class="empty-state error">Error loading links: ' + error.message + '<br><br><strong>Debug:</strong> Try refreshing the extension in Safari Preferences → Extensions</div>';
+            }
+        }
+
+        // Create HTML for a single link
+        function createLinkHtml(shortName, mapping) {
+            return `
+                <div class="link-item">
+                    <div class="link-name">go/${shortName}</div>
+                    <div class="link-url">${mapping.url}</div>
+                    ${mapping.description ? `<div class="link-description">${mapping.description}</div>` : ''}
+                    <div class="link-actions">
+                        <button class="btn btn-secondary" onclick="openLink('${mapping.url}')">🔗 Open</button>
+                        <button class="btn btn-secondary" onclick="copyLink('go/${shortName}')">📋 Copy</button>
+                        <button class="btn btn-danger" onclick="deleteLink('${shortName}')">🗑 Delete</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Link actions
+        function openLink(url) {
+            window.open(url, '_blank');
+        }
+
+        function copyLink(linkText) {
+            navigator.clipboard.writeText(linkText).then(() => {
+                showMessage('Copied: ' + linkText, 'success');
+            }).catch(() => {
+                showMessage('Failed to copy to clipboard', 'error');
+            });
+        }
+
+        async function deleteLink(shortName) {
+            if (!confirm(`Are you sure you want to delete go/${shortName}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await sendMessage({
+                    action: 'deleteMapping',
+                    shortName: shortName
+                });
+                
+                if (response.error) {
+                    showMessage('Error deleting link: ' + response.error, 'error');
+                } else {
+                    showMessage('Link deleted successfully', 'success');
+                    loadLinks(); // Refresh the list
+                }
+            } catch (error) {
+                showMessage('Error deleting link: ' + error.message, 'error');
+            }
+        }
+
+        // Utility functions
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = text;
+            messageDiv.className = 'message ' + type;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function sendMessage(message) {
+            return new Promise((resolve, reject) => {
+                const extensionAPI = window.browser || window.chrome;
+                
+                if (!extensionAPI || !extensionAPI.runtime) {
+                    reject(new Error('Extension API not available. Make sure the extension is properly loaded.'));
+                    return;
+                }
+                
+                console.log('Sending message:', message);
+                console.log('Using API:', extensionAPI === window.browser ? 'browser' : 'chrome');
+                
+                // Detect Safari Web Extension context
+                const isSafari = window.browser && !window.chrome;
+                
+                if (isSafari) {
+                    // Safari Web Extensions require extension ID even for extension pages
+                    const extensionId = extensionAPI.runtime.id;
+                    console.log('Safari: Extension ID:', extensionId);
+                    
+                    if (!extensionId) {
+                        reject(new Error('Safari: Extension ID not available'));
+                        return;
+                    }
+                    
+                    try {
+                        extensionAPI.runtime.sendMessage(extensionId, message, (response) => {
+                            const lastError = extensionAPI.runtime.lastError;
+                            if (lastError) {
+                                console.error('Safari runtime error:', lastError);
+                                reject(new Error(lastError.message));
+                            } else {
+                                console.log('Safari received response:', response);
+                                resolve(response);
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Safari sendMessage error:', error);
+                        reject(new Error('Safari sendMessage failed: ' + error.message));
+                    }
+                } else {
+                    // Chrome/Firefox style - no extension ID needed
+                    try {
+                        extensionAPI.runtime.sendMessage(message, (response) => {
+                            const lastError = extensionAPI.runtime.lastError;
+                            if (lastError) {
+                                console.error('Runtime error:', lastError);
+                                reject(new Error(lastError.message));
+                            } else {
+                                console.log('Received response:', response);
+                                resolve(response);
+                            }
+                        });
+                    } catch (error) {
+                        console.error('sendMessage error:', error);
+                        reject(new Error('Failed to send message: ' + error.message));
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('GoLinks Manager loaded');
+            
+            // Set up tab click handlers
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    console.log('Tab clicked:', tabName);
+                    showTab(tabName, this);
+                });
+            });
+            
+            // Check URL parameters for initial mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            if (mode === 'manage') {
+                showTab('manage');
+            }
+        });
+    </script>
+</body>
+</html>

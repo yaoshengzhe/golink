@@ -14,12 +14,10 @@ if (fs.existsSync(safariDir)) {
 }
 fs.mkdirSync(safariDir);
 
-// Copy files
+// Copy files (except create.html which we'll replace with comprehensive version)
 const filesToCopy = [
   'background.js',
-  'popup.html',
   'popup.js', 
-  'create.html',
   'create.js',
   'styles.css'
 ];
@@ -35,6 +33,18 @@ filesToCopy.forEach(file => {
     console.log(`⚠️  ${file} not found`);
   }
 });
+
+// Copy comprehensive create page
+const safariCreateSource = path.join(__dirname, 'safari-create.html');
+const safariCreateDest = path.join(safariDir, 'create.html');
+fs.copyFileSync(safariCreateSource, safariCreateDest);
+console.log('✅ Copied Safari-specific comprehensive create.html');
+
+// Copy Safari-specific popup (simple version for testing)
+const safariPopupSource = path.join(__dirname, 'safari-popup-simple.html');
+const safariPopupDest = path.join(safariDir, 'popup.html');
+fs.copyFileSync(safariPopupSource, safariPopupDest);
+console.log('✅ Copied Safari-specific simple popup.html');
 
 // Copy icons directory
 const iconsSourceDir = path.join(sourceDir, 'icons');
@@ -63,23 +73,134 @@ const destManifestPath = path.join(safariDir, 'manifest.json');
 fs.copyFileSync(safariManifestPath, destManifestPath);
 console.log('✅ Copied Safari manifest');
 
-// Modify background.js for Safari compatibility
+// Create Safari-specific background.js
 const backgroundPath = path.join(safariDir, 'background.js');
-if (fs.existsSync(backgroundPath)) {
-  let content = fs.readFileSync(backgroundPath, 'utf8');
-  
-  // Replace omnibox API calls with comments (not supported in Safari)
-  content = content.replace(/chrome\.omnibox\.[^;]+;/g, '// Omnibox API not supported in Safari');
-  
-  // Add Safari-specific namespace fallback
-  content = `// Safari Web Extension compatibility
-const browser = chrome || safari?.extension || {};
+const safariBackgroundScript = `// Safari Web Extension - GoLinks Background Script
+console.log('GoLinks Safari Extension loaded');
 
-${content}`;
-  
-  fs.writeFileSync(backgroundPath, content);
-  console.log('✅ Modified background.js for Safari');
+// Storage helper functions
+async function getGoLinkMapping(shortName) {
+  return new Promise(resolve => {
+    chrome.storage.local.get([\`golink_\${shortName}\`], result => {
+      resolve(result[\`golink_\${shortName}\`] || null);
+    });
+  });
 }
+
+async function saveGoLinkMapping(shortName, url, description = '') {
+  const key = \`golink_\${shortName}\`;
+  const mapping = {
+    shortName,
+    url,
+    description,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+
+  return new Promise(resolve => {
+    chrome.storage.local.set({ [key]: mapping }, () => {
+      resolve(mapping);
+    });
+  });
+}
+
+async function getAllGoLinkMappings() {
+  return new Promise(resolve => {
+    chrome.storage.local.get(null, result => {
+      const mappings = {};
+      for (const [key, value] of Object.entries(result)) {
+        if (key.startsWith('golink_')) {
+          const shortName = key.replace('golink_', '');
+          mappings[shortName] = value;
+        }
+      }
+      resolve(mappings);
+    });
+  });
+}
+
+async function deleteGoLinkMapping(shortName) {
+  const key = \`golink_\${shortName}\`;
+  return new Promise(resolve => {
+    chrome.storage.local.remove([key], () => {
+      resolve();
+    });
+  });
+}
+
+// Handle extension icon clicks (since popup doesn't work properly in Safari)
+chrome.browserAction.onClicked.addListener((tab) => {
+  console.log('Safari: Extension icon clicked');
+  chrome.tabs.create({
+    url: chrome.runtime.getURL('create.html')
+  });
+});
+
+// Safari approach: Listen for tab updates and check URL
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'loading' && tab.url) {
+    try {
+      const url = new URL(tab.url);
+      
+      // Check if this is a go/ URL pattern
+      if (url.hostname === 'go' && url.pathname && url.pathname.length > 1) {
+        const shortName = url.pathname.substring(1); // Remove leading slash
+        
+        console.log(\`Safari: Detected go link: \${shortName}\`);
+        
+        // Look up the mapping
+        const mapping = await getGoLinkMapping(shortName);
+        
+        if (mapping && mapping.url) {
+          console.log(\`Safari: Redirecting go/\${shortName} to \${mapping.url}\`);
+          chrome.tabs.update(tabId, { url: mapping.url });
+        } else {
+          console.log(\`Safari: No mapping found for \${shortName}, showing create page\`);
+          const createUrl = chrome.runtime.getURL('create.html') + 
+                           \`?shortName=\${encodeURIComponent(shortName)}\`;
+          chrome.tabs.update(tabId, { url: createUrl });
+        }
+      }
+    } catch (error) {
+      console.error('Safari GoLinks error:', error);
+    }
+  }
+});
+
+// Message handler for popup communication
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  switch (request.action) {
+    case 'saveMapping':
+      saveGoLinkMapping(request.shortName, request.url, request.description)
+        .then(sendResponse)
+        .catch(error => sendResponse({ error: error.message }));
+      return true;
+
+    case 'getMapping':
+      getGoLinkMapping(request.shortName)
+        .then(sendResponse)
+        .catch(error => sendResponse({ error: error.message }));
+      return true;
+
+    case 'getAllMappings':
+      getAllGoLinkMappings()
+        .then(sendResponse)
+        .catch(error => sendResponse({ error: error.message }));
+      return true;
+
+    case 'deleteMapping':
+      deleteGoLinkMapping(request.shortName)
+        .then(() => sendResponse({ success: true }))
+        .catch(error => sendResponse({ error: error.message }));
+      return true;
+  }
+});
+
+console.log('GoLinks Safari Extension ready');
+`;
+
+fs.writeFileSync(backgroundPath, safariBackgroundScript);
+console.log('✅ Created Safari-specific background.js');
 
 console.log('\n🎉 Safari extension prepared!');
 console.log(`📁 Location: ${safariDir}`);
