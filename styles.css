@@ -17,6 +17,15 @@ body {
   background: #f8f9fa;
 }
 
+body.popup {
+  margin: 0;
+  padding: 0;
+  width: 400px;
+  min-height: 500px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
 /* Create Page Styles */
 .container {
   max-width: 600px;
@@ -271,15 +280,18 @@ input:focus {
 /* Popup Styles */
 .popup {
   width: 400px;
+  min-height: 500px;
   max-height: 600px;
   background: white;
-  overflow: hidden;
+  overflow-y: auto;
+  position: relative;
 }
 
 .popup-container {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
 }
 
 .popup-header {
@@ -312,7 +324,7 @@ input:focus {
 .content {
   flex: 1;
   overflow-y: auto;
-  max-height: 400px;
+  padding: 0;
 }
 
 .loading {
@@ -441,7 +453,7 @@ input:focus {
 
 /* Modal Styles */
 .modal {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -456,10 +468,10 @@ input:focus {
 .modal-content {
   background: white;
   border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
+  width: 360px;
+  max-height: 500px;
   overflow-y: auto;
+  margin: 20px;
 }
 
 .modal-header {
