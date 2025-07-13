@@ -19,6 +19,7 @@ const filesToCopy = [
   'background.js',
   'popup.js', 
   'create.js',
+  'debug.js',
   'styles.css'
 ];
 
@@ -46,6 +47,16 @@ const safariPopupDest = path.join(safariDir, 'popup.html');
 fs.copyFileSync(safariPopupSource, safariPopupDest);
 console.log('✅ Copied Safari-specific simple popup.html');
 
+// Copy debug page
+const debugSource = path.join(sourceDir, 'debug.html');
+const debugDest = path.join(safariDir, 'debug.html');
+if (fs.existsSync(debugSource)) {
+  fs.copyFileSync(debugSource, debugDest);
+  console.log('✅ Copied debug.html');
+} else {
+  console.log('⚠️  debug.html not found');
+}
+
 // Copy icons directory
 const iconsSourceDir = path.join(sourceDir, 'icons');
 const iconsDestDir = path.join(safariDir, 'icons');
@@ -67,15 +78,28 @@ if (fs.existsSync(iconsSourceDir)) {
 }
 
 
-// Copy Safari manifest
+// Copy Safari manifest (use fixed version if available)
+const safariFixedManifestPath = path.join(__dirname, '..', 'safari-fixes', 'safari-manifest-fixed.json');
 const safariManifestPath = path.join(__dirname, 'safari-manifest.json');
 const destManifestPath = path.join(safariDir, 'manifest.json');
-fs.copyFileSync(safariManifestPath, destManifestPath);
-console.log('✅ Copied Safari manifest');
 
-// Create Safari-specific background.js
+if (fs.existsSync(safariFixedManifestPath)) {
+  fs.copyFileSync(safariFixedManifestPath, destManifestPath);
+  console.log('✅ Copied Safari manifest (FIXED version)');
+} else {
+  fs.copyFileSync(safariManifestPath, destManifestPath);
+  console.log('✅ Copied Safari manifest');
+}
+
+// Create Safari-specific background.js (use fixed version if available)
 const backgroundPath = path.join(safariDir, 'background.js');
-const safariBackgroundScript = `// Safari Web Extension - GoLinks Background Script
+const safariFixedBackgroundPath = path.join(__dirname, '..', 'safari-fixes', 'safari-background-fixed.js');
+
+if (fs.existsSync(safariFixedBackgroundPath)) {
+  fs.copyFileSync(safariFixedBackgroundPath, backgroundPath);
+  console.log('✅ Used Safari background script (FIXED version)');
+} else {
+  const safariBackgroundScript = `// Safari Web Extension - GoLinks Background Script
 console.log('GoLinks Safari Extension loaded');
 
 // Cross-browser API compatibility
@@ -202,8 +226,18 @@ extensionAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
 console.log('GoLinks Safari Extension ready');
 `;
 
-fs.writeFileSync(backgroundPath, safariBackgroundScript);
-console.log('✅ Created Safari-specific background.js');
+  fs.writeFileSync(backgroundPath, safariBackgroundScript);
+  console.log('✅ Created Safari-specific background.js');
+}
+
+// Copy Safari messaging helper
+const safariMessagingHelperPath = path.join(__dirname, '..', 'safari-fixes', 'safari-messaging-helper.js');
+const destMessagingHelperPath = path.join(safariDir, 'safari-messaging-helper.js');
+
+if (fs.existsSync(safariMessagingHelperPath)) {
+  fs.copyFileSync(safariMessagingHelperPath, destMessagingHelperPath);
+  console.log('✅ Copied Safari messaging helper');
+}
 
 console.log('\n🎉 Safari extension prepared!');
 console.log(`📁 Location: ${safariDir}`);

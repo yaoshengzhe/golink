@@ -210,7 +210,9 @@ document.addEventListener('DOMContentLoaded', function () {
         copyToClipboard(`go/${shortName}`);
         break;
       case 'open':
-        chrome.tabs.create({ url: url });
+        // Cross-browser API compatibility
+        const extensionAPI = (typeof browser !== 'undefined') ? browser : chrome;
+        extensionAPI.tabs.create({ url: url });
         window.close();
         break;
       case 'edit':
@@ -251,7 +253,9 @@ document.addEventListener('DOMContentLoaded', function () {
    * Open the create page
    */
   function openCreatePage() {
-    chrome.tabs.create({ url: chrome.runtime.getURL('create.html') });
+    // Cross-browser API compatibility
+    const extensionAPI = (typeof browser !== 'undefined') ? browser : chrome;
+    extensionAPI.tabs.create({ url: extensionAPI.runtime.getURL('create.html') });
     window.close();
   }
 
@@ -453,10 +457,13 @@ document.addEventListener('DOMContentLoaded', function () {
    * Send message to background script
    */
   function sendMessage(message) {
+    // Cross-browser API compatibility
+    const extensionAPI = (typeof browser !== 'undefined') ? browser : chrome;
+    
     return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage(message, response => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
+      extensionAPI.runtime.sendMessage(message, response => {
+        if (extensionAPI.runtime.lastError) {
+          reject(new Error(extensionAPI.runtime.lastError.message));
         } else {
           resolve(response);
         }

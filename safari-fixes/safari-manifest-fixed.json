@@ -1,0 +1,41 @@
+{
+  "manifest_version": 2,
+  "name": "GoLinks Safari",
+  "version": "1.0.0",
+  "description": "Personal go-links system for quick navigation to your favorite URLs",
+  
+  "permissions": [
+    "storage",
+    "tabs",
+    "webNavigation",
+    "activeTab",
+    "http://go/*",
+    "https://go/*"
+  ],
+
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  
+  "browser_action": {
+    "default_title": "GoLinks Manager",
+    "default_popup": "popup.html"
+  },
+  
+  "web_accessible_resources": [
+    "create.html",
+    "debug.html",
+    "popup.html",
+    "styles.css",
+    "icons/*.png"
+  ],
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+
+  "content_security_policy": "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; object-src 'self';"
+}

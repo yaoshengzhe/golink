@@ -51,6 +51,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     try {
+      console.log(`Attempting to save golink: ${shortName} -> ${url}`);
+      
       // Save the mapping
       const response = await sendMessage({
         action: 'saveMapping',
@@ -59,9 +61,13 @@ document.addEventListener('DOMContentLoaded', function () {
         description: description,
       });
 
+      console.log('Save response received:', response);
+
       if (response.error) {
+        console.error('Save failed with error:', response.error);
         showMessage(`Error: ${response.error}`, 'error');
       } else {
+        console.log('Save successful, response:', response);
         showMessage(
           `GoLink created successfully! You can now use go/${shortName}`,
           'success'
@@ -73,6 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 2000);
       }
     } catch (error) {
+      console.error('Exception during save:', error);
       showMessage(`Error creating GoLink: ${error.message}`, 'error');
     }
   });
@@ -86,6 +93,23 @@ document.addEventListener('DOMContentLoaded', function () {
       window.close();
     }
   });
+
+  // Add debug button for troubleshooting
+  const debugBtn = document.createElement('button');
+  debugBtn.textContent = '🔍 Debug';
+  debugBtn.className = 'btn btn-secondary';
+  debugBtn.style.marginLeft = '10px';
+  debugBtn.addEventListener('click', function() {
+    const extensionAPI = (typeof browser !== 'undefined') ? browser : chrome;
+    const debugUrl = extensionAPI.runtime.getURL('debug.html');
+    extensionAPI.tabs.create({ url: debugUrl });
+  });
+  
+  // Add debug button to form actions
+  const formActions = document.querySelector('.form-actions');
+  if (formActions) {
+    formActions.appendChild(debugBtn);
+  }
 
   // Update button handler for existing mappings
   updateBtn.addEventListener('click', function () {
@@ -205,10 +229,13 @@ function showMessage(text, type = 'info') {
  * Send message to background script
  */
 function sendMessage(message) {
+  // Cross-browser API compatibility
+  const extensionAPI = (typeof browser !== 'undefined') ? browser : chrome;
+  
   return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage(message, response => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
+    extensionAPI.runtime.sendMessage(message, response => {
+      if (extensionAPI.runtime.lastError) {
+        reject(new Error(extensionAPI.runtime.lastError.message));
       } else {
         resolve(response);
       }
