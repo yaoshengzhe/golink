@@ -124,15 +124,15 @@ describe('Safari Fixes Validation Tests', () => {
   });
 
   describe('Safari Build Process Integration', () => {
-    test('should modify prepare-safari.js to use fixed files', () => {
-      const prepareSafariPath = path.join(__dirname, '..', 'scripts', 'prepare-safari.js');
-      const content = fs.readFileSync(prepareSafariPath, 'utf8');
+    test('should have new build-safari.js script', () => {
+      const buildSafariPath = path.join(__dirname, '..', 'scripts', 'build-safari.js');
+      const content = fs.readFileSync(buildSafariPath, 'utf8');
       
-      expect(content).toContain('safari-fixes');
-      expect(content).toContain('safari-manifest-fixed.json');
-      expect(content).toContain('background.js');
-      expect(content).toContain('messaging-helper.js');
-      expect(content).toContain('FIXED version');
+      expect(content).toContain('Building Safari extension');
+      expect(content).toContain('safariDir');
+      expect(content).toContain('dist', 'safari');
+      expect(content).toContain('shared');
+      expect(content).toContain('successfully');
     });
   });
 
