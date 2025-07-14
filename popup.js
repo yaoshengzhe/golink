@@ -209,12 +209,13 @@ document.addEventListener('DOMContentLoaded', function () {
       case 'copy':
         copyToClipboard(`go/${shortName}`);
         break;
-      case 'open':
+      case 'open': {
         // Cross-browser API compatibility
         const extensionAPI = (typeof browser !== 'undefined') ? browser : chrome;
         extensionAPI.tabs.create({ url: url });
         window.close();
         break;
+      }
       case 'edit':
         openEditModal(shortName);
         break;

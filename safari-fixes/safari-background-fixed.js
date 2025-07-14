@@ -190,7 +190,7 @@ extensionAPI.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 // FIXED: Message handler for popup communication with better error handling
 extensionAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Safari: Received message:', request.action, 'from:', sender.tab ? sender.tab.url : 'popup');
+  console.log('Safari: Received message:', request.action);
   console.log('Safari: Message details:', request);
   
   switch (request.action) {

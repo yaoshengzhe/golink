@@ -14,10 +14,8 @@ if (fs.existsSync(safariDir)) {
 }
 fs.mkdirSync(safariDir);
 
-// Copy files (except create.html which we'll replace with comprehensive version)
+// Copy files - skip background.js and popup.js as they'll be replaced with Safari-specific versions
 const filesToCopy = [
-  'background.js',
-  'popup.js', 
   'create.js',
   'debug.js',
   'styles.css'
@@ -35,17 +33,32 @@ filesToCopy.forEach(file => {
   }
 });
 
+// Copy Safari-compatible popup.js if available
+const safariPopupJs = path.join(__dirname, '..', 'safari-fixes', 'safari-popup-fixed.js');
+const mainPopupJs = path.join(sourceDir, 'popup.js');
+const destPopupJs = path.join(safariDir, 'popup.js');
+
+if (fs.existsSync(safariPopupJs)) {
+  fs.copyFileSync(safariPopupJs, destPopupJs);
+  console.log('✅ Copied Safari-compatible popup.js');
+} else if (fs.existsSync(mainPopupJs)) {
+  fs.copyFileSync(mainPopupJs, destPopupJs);
+  console.log('✅ Copied popup.js (main version)');
+} else {
+  console.log('⚠️  popup.js not found');
+}
+
 // Copy comprehensive create page
 const safariCreateSource = path.join(__dirname, 'safari-create.html');
 const safariCreateDest = path.join(safariDir, 'create.html');
 fs.copyFileSync(safariCreateSource, safariCreateDest);
 console.log('✅ Copied Safari-specific comprehensive create.html');
 
-// Copy Safari-specific popup (simple version for testing)
-const safariPopupSource = path.join(__dirname, 'safari-popup-simple.html');
+// Copy Safari-specific popup (with working manage page)
+const safariPopupSource = path.join(__dirname, 'safari-popup.html');
 const safariPopupDest = path.join(safariDir, 'popup.html');
 fs.copyFileSync(safariPopupSource, safariPopupDest);
-console.log('✅ Copied Safari-specific simple popup.html');
+console.log('✅ Copied Safari-specific popup.html with manage functionality');
 
 // Copy debug page
 const debugSource = path.join(sourceDir, 'debug.html');

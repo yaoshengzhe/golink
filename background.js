@@ -1,7 +1,10 @@
 // GoLinks background script for URL interception and redirection
 
+// Cross-browser API compatibility  
+const extensionAPI = (typeof browser !== 'undefined') ? browser : chrome;
+
 // Listen for navigation events
-chrome.webNavigation.onBeforeNavigate.addListener(
+extensionAPI.webNavigation.onBeforeNavigate.addListener(
   async details => {
     // Only handle main frame navigation (not iframes)
     if (details.frameId !== 0) return;
@@ -20,16 +23,16 @@ chrome.webNavigation.onBeforeNavigate.addListener(
           if (mapping && mapping.url) {
             // Redirect to the mapped URL
             console.log(`Redirecting go/${shortName} to ${mapping.url}`);
-            chrome.tabs.update(details.tabId, { url: mapping.url });
+            extensionAPI.tabs.update(details.tabId, { url: mapping.url });
           } else {
             // No mapping found, redirect to create page
             console.log(
               `No mapping found for go/${shortName}, redirecting to create page`
             );
             const createUrl =
-              chrome.runtime.getURL('create.html') +
+              extensionAPI.runtime.getURL('create.html') +
               `?shortName=${encodeURIComponent(shortName)}`;
-            chrome.tabs.update(details.tabId, { url: createUrl });
+            extensionAPI.tabs.update(details.tabId, { url: createUrl });
           }
         } catch (error) {
           console.error('Error handling go-link:', error);
@@ -45,6 +48,32 @@ chrome.webNavigation.onBeforeNavigate.addListener(
     ],
   }
 );
+
+// Safari fallback: also listen for tab updates
+extensionAPI.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'loading' && tab.url) {
+    try {
+      const url = new URL(tab.url);
+      if (isGoLink(url)) {
+        const shortName = extractShortName(url);
+        if (shortName) {
+          const mapping = await getGoLinkMapping(shortName);
+          if (mapping && mapping.url) {
+            console.log(`Safari fallback: Redirecting go/${shortName} to ${mapping.url}`);
+            extensionAPI.tabs.update(tabId, { url: mapping.url });
+          } else {
+            console.log(`Safari fallback: No mapping found for ${shortName}`);
+            const createUrl = extensionAPI.runtime.getURL('create.html') + 
+                           `?shortName=${encodeURIComponent(shortName)}`;
+            extensionAPI.tabs.update(tabId, { url: createUrl });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Safari fallback error:', error);
+    }
+  }
+});
 
 /**
  * Check if a URL is a go-link pattern
@@ -97,8 +126,9 @@ function extractShortName(url) {
  */
 async function getGoLinkMapping(shortName) {
   return new Promise(resolve => {
-    chrome.storage.local.get([`golink_${shortName}`], result => {
-      resolve(result[`golink_${shortName}`] || null);
+    extensionAPI.storage.local.get(['golinks'], result => {
+      const golinks = result.golinks || {};
+      resolve(golinks[shortName] || null);
     });
   });
 }
@@ -107,7 +137,6 @@ async function getGoLinkMapping(shortName) {
  * Save a go-link mapping to storage
  */
 async function saveGoLinkMapping(shortName, url, description = '') {
-  const key = `golink_${shortName}`;
   const mapping = {
     shortName,
     url,
@@ -117,8 +146,12 @@ async function saveGoLinkMapping(shortName, url, description = '') {
   };
 
   return new Promise(resolve => {
-    chrome.storage.local.set({ [key]: mapping }, () => {
-      resolve(mapping);
+    extensionAPI.storage.local.get(['golinks'], result => {
+      const golinks = result.golinks || {};
+      golinks[shortName] = mapping;
+      extensionAPI.storage.local.set({ golinks }, () => {
+        resolve(mapping);
+      });
     });
   });
 }
@@ -128,15 +161,8 @@ async function saveGoLinkMapping(shortName, url, description = '') {
  */
 async function getAllGoLinkMappings() {
   return new Promise(resolve => {
-    chrome.storage.local.get(null, result => {
-      const mappings = {};
-      for (const [key, value] of Object.entries(result)) {
-        if (key.startsWith('golink_')) {
-          const shortName = key.replace('golink_', '');
-          mappings[shortName] = value;
-        }
-      }
-      resolve(mappings);
+    extensionAPI.storage.local.get(['golinks'], result => {
+      resolve(result.golinks || {});
     });
   });
 }
@@ -145,16 +171,19 @@ async function getAllGoLinkMappings() {
  * Delete a go-link mapping
  */
 async function deleteGoLinkMapping(shortName) {
-  const key = `golink_${shortName}`;
   return new Promise(resolve => {
-    chrome.storage.local.remove([key], () => {
-      resolve();
+    extensionAPI.storage.local.get(['golinks'], result => {
+      const golinks = result.golinks || {};
+      delete golinks[shortName];
+      extensionAPI.storage.local.set({ golinks }, () => {
+        resolve();
+      });
     });
   });
 }
 
 // Expose functions for use by other extension pages
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+extensionAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
     case 'saveMapping':
       saveGoLinkMapping(request.shortName, request.url, request.description)

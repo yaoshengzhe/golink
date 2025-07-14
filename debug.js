@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
     try {
       // Clear by setting empty golinks object
-      const response = await sendMessage({
+      await sendMessage({
         action: 'saveMapping',
         shortName: '__clear__',
         url: 'about:blank',

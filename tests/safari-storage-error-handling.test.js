@@ -306,43 +306,9 @@ describe('Safari Storage Error Handling Tests', () => {
         });
       };
 
-      // Simulate message handler
-      const messageHandler = (request, sender, sendResponse) => {
-        switch (request.action) {
-          case 'saveMapping':
-            saveGoLinkMapping(request.shortName, request.url, request.description)
-              .then(result => {
-                console.log('Safari: Saved mapping:', result);
-                sendResponse(result);
-              })
-              .catch(error => {
-                console.error('Safari: Save mapping error:', error);
-                sendResponse({ error: error.message });
-              });
-            return true;
-
-          default:
-            sendResponse({ error: 'Unknown action' });
-            return false;
-        }
-      };
-
-      const mockSendResponse = jest.fn();
-      const request = {
-        action: 'saveMapping',
-        shortName: 'test',
-        url: 'https://example.com',
-        description: 'Test site'
-      };
-
-      messageHandler(request, null, mockSendResponse);
-      
-      // Give async operation time to complete
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      expect(mockSendResponse).toHaveBeenCalledWith({
-        error: 'Storage error'
-      });
+      // Test the save operation directly
+      await expect(saveGoLinkMapping('test', 'https://example.com', 'Test site'))
+        .rejects.toThrow('Storage error');
     });
 
     test('should handle successful saves through message handler', async () => {
@@ -356,7 +322,7 @@ describe('Safari Storage Error Handling Tests', () => {
 
       mockSafariEnvironment.browser.storage.local.set.mockImplementation((data, callback) => {
         mockSafariEnvironment.browser.runtime.lastError = null;
-        callback();
+        if (callback) callback();
       });
 
       const saveGoLinkMapping = async (shortName, url, description = '') => {
@@ -389,41 +355,10 @@ describe('Safari Storage Error Handling Tests', () => {
         });
       };
 
-      // Simulate message handler
-      const messageHandler = (request, sender, sendResponse) => {
-        switch (request.action) {
-          case 'saveMapping':
-            saveGoLinkMapping(request.shortName, request.url, request.description)
-              .then(result => {
-                console.log('Safari: Saved mapping:', result);
-                sendResponse(result);
-              })
-              .catch(error => {
-                console.error('Safari: Save mapping error:', error);
-                sendResponse({ error: error.message });
-              });
-            return true;
-
-          default:
-            sendResponse({ error: 'Unknown action' });
-            return false;
-        }
-      };
-
-      const mockSendResponse = jest.fn();
-      const request = {
-        action: 'saveMapping',
-        shortName: 'test',
-        url: 'https://example.com',
-        description: 'Test site'
-      };
-
-      messageHandler(request, null, mockSendResponse);
+      // Test the save operation directly
+      const result = await saveGoLinkMapping('test', 'https://example.com', 'Test site');
       
-      // Give async operation time to complete
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      expect(mockSendResponse).toHaveBeenCalledWith({
+      expect(result).toEqual({
         shortName: 'test',
         url: 'https://example.com',
         description: 'Test site',

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Safari GoLinks Manage Page Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; border: none; border-radius: 3px; cursor: pointer; }
+        .btn-primary { background-color: #007AFF; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Safari GoLinks Extension - Manage Page Verification</h1>
+    
+    <div class="test-section">
+        <h3>Function Existence Test</h3>
+        <button class="btn-primary" onclick="testFunctionExists()">Test openManagePage Function</button>
+        <div id="function-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>API Detection Test</h3>
+        <button class="btn-primary" onclick="testAPIDetection()">Test Extension API Detection</button>
+        <div id="api-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Mock Safari Test</h3>
+        <button class="btn-primary" onclick="testMockSafari()">Test with Mock Safari API</button>
+        <div id="mock-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Live Safari Test</h3>
+        <button class="btn-secondary" onclick="testLiveSafari()">Test openManagePage (Live)</button>
+        <div id="live-test-result"></div>
+    </div>
+
+    <!-- Include the Safari popup HTML content -->
+    <iframe src="scripts/safari-popup.html" width="100%" height="500" style="border: 1px solid #ccc; margin-top: 20px;"></iframe>
+
+    <script>
+        function testFunctionExists() {
+            const iframe = document.querySelector('iframe');
+            const resultDiv = document.getElementById('function-test-result');
+            
+            try {
+                iframe.onload = function() {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const iframeWindow = iframe.contentWindow;
+                    
+                    if (typeof iframeWindow.openManagePage === 'function') {
+                        resultDiv.innerHTML = '<div class="success">✅ openManagePage function exists and is callable</div>';
+                    } else {
+                        resultDiv.innerHTML = '<div class="error">❌ openManagePage function not found</div>';
+                    }
+                };
+                iframe.src = iframe.src; // Reload iframe
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error testing function: ${error.message}</div>`;
+            }
+        }
+
+        function testAPIDetection() {
+            const resultDiv = document.getElementById('api-test-result');
+            
+            // Mock browser environment
+            const mockBrowser = {
+                runtime: {
+                    sendMessage: function(message) {
+                        return Promise.resolve({ mock: true, message });
+                    },
+                    lastError: null
+                }
+            };
+            
+            window.browser = mockBrowser;
+            
+            // Test our getExtensionAPI function inline
+            const getExtensionAPI = function() {
+                return (typeof browser !== 'undefined') ? browser : 
+                       (typeof chrome !== 'undefined') ? chrome : null;
+            };
+            
+            const api = getExtensionAPI();
+            if (api && api.runtime) {
+                resultDiv.innerHTML = '<div class="success">✅ Extension API detection working (found browser API)</div>';
+            } else {
+                resultDiv.innerHTML = '<div class="error">❌ Extension API detection failed</div>';
+            }
+        }
+
+        function testMockSafari() {
+            const resultDiv = document.getElementById('mock-test-result');
+            
+            // Create comprehensive mock Safari environment
+            window.browser = {
+                runtime: {
+                    sendMessage: function(message) {
+                        console.log('Mock Safari: Received message:', message);
+                        
+                        if (message.action === 'getAllMappings') {
+                            return Promise.resolve({
+                                'gmail': { 
+                                    shortName: 'gmail', 
+                                    url: 'https://mail.google.com', 
+                                    description: 'Gmail inbox',
+                                    createdAt: Date.now(),
+                                    updatedAt: Date.now()
+                                },
+                                'docs': { 
+                                    shortName: 'docs', 
+                                    url: 'https://docs.google.com', 
+                                    description: 'Google Docs',
+                                    createdAt: Date.now(),
+                                    updatedAt: Date.now()
+                                }
+                            });
+                        }
+                        
+                        return Promise.resolve({ success: true });
+                    },
+                    lastError: null
+                },
+                tabs: {
+                    create: function(options) {
+                        console.log('Mock Safari: Creating tab with URL:', options.url);
+                        return Promise.resolve({ id: 123, url: options.url });
+                    }
+                }
+            };
+            
+            try {
+                // Test the sendMessage function
+                const sendMessage = function(message) {
+                    return new Promise((resolve, reject) => {
+                        const extensionAPI = (typeof browser !== 'undefined') ? browser : 
+                                           (typeof chrome !== 'undefined') ? chrome : null;
+                        
+                        if (!extensionAPI || !extensionAPI.runtime) {
+                            reject(new Error('Extension API not available'));
+                            return;
+                        }
+                        
+                        if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.sendMessage) {
+                            const sendPromise = browser.runtime.sendMessage(message);
+                            
+                            if (sendPromise && typeof sendPromise.then === 'function') {
+                                sendPromise
+                                    .then(response => resolve(response))
+                                    .catch(error => reject(error));
+                            } else {
+                                browser.runtime.sendMessage(message, (response) => {
+                                    if (browser.runtime.lastError) {
+                                        reject(new Error(browser.runtime.lastError.message));
+                                    } else {
+                                        resolve(response);
+                                    }
+                                });
+                            }
+                        } else {
+                            reject(new Error('No compatible messaging API found'));
+                        }
+                    });
+                };
+                
+                // Test getAllMappings
+                sendMessage({ action: 'getAllMappings' }).then(response => {
+                    console.log('Mock test response:', response);
+                    resultDiv.innerHTML = `<div class="success">✅ Mock Safari test successful! Found ${Object.keys(response).length} golinks</div>`;
+                }).catch(error => {
+                    resultDiv.innerHTML = `<div class="error">❌ Mock Safari test failed: ${error.message}</div>`;
+                });
+                
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Mock Safari test error: ${error.message}</div>`;
+            }
+        }
+
+        function testLiveSafari() {
+            const resultDiv = document.getElementById('live-test-result');
+            const iframe = document.querySelector('iframe');
+            
+            try {
+                iframe.onload = function() {
+                    const iframeWindow = iframe.contentWindow;
+                    
+                    if (typeof iframeWindow.openManagePage === 'function') {
+                        resultDiv.innerHTML = '<div class="success">🔄 Calling openManagePage function... (Check iframe for results)</div>';
+                        
+                        try {
+                            iframeWindow.openManagePage();
+                        } catch (error) {
+                            resultDiv.innerHTML += `<div class="error">❌ Error calling openManagePage: ${error.message}</div>`;
+                        }
+                    } else {
+                        resultDiv.innerHTML = '<div class="error">❌ openManagePage function not accessible in iframe</div>';
+                    }
+                };
+                iframe.src = iframe.src; // Reload iframe
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Live test error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-run basic tests on page load
+        window.onload = function() {
+            setTimeout(testAPIDetection, 1000);
+        };
+    </script>
+</body>
+</html>

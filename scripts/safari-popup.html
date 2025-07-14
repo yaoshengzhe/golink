@@ -126,12 +126,82 @@
     </div>
 
     <script>
+        // Safari messaging compatibility functions
+        function getExtensionAPI() {
+            return (typeof browser !== 'undefined') ? browser : 
+                   (typeof chrome !== 'undefined') ? chrome : null;
+        }
+
+        function sendMessage(message) {
+            return new Promise((resolve, reject) => {
+                const extensionAPI = getExtensionAPI();
+                
+                if (!extensionAPI || !extensionAPI.runtime) {
+                    reject(new Error('Extension API not available'));
+                    return;
+                }
+
+                console.log('Safari: Sending message:', message);
+
+                // Safari/Firefox use browser.runtime.sendMessage
+                if (typeof browser !== 'undefined' && browser.runtime && browser.runtime.sendMessage) {
+                    try {
+                        const sendPromise = browser.runtime.sendMessage(message);
+                        
+                        if (sendPromise && typeof sendPromise.then === 'function') {
+                            sendPromise
+                                .then(response => {
+                                    console.log('Safari: Received response:', response);
+                                    resolve(response);
+                                })
+                                .catch(error => {
+                                    console.error('Safari: Message error:', error);
+                                    reject(error);
+                                });
+                        } else {
+                            // Fallback for older Safari versions
+                            browser.runtime.sendMessage(message, (response) => {
+                                if (browser.runtime.lastError) {
+                                    reject(new Error(browser.runtime.lastError.message));
+                                } else {
+                                    resolve(response);
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Safari: Browser sendMessage error:', error);
+                        reject(error);
+                    }
+                } 
+                // Chrome/Edge use chrome.runtime.sendMessage with callbacks
+                else if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    try {
+                        chrome.runtime.sendMessage(message, (response) => {
+                            if (chrome.runtime.lastError) {
+                                console.error('Chrome: Runtime error:', chrome.runtime.lastError);
+                                reject(new Error(chrome.runtime.lastError.message));
+                            } else {
+                                console.log('Chrome: Received response:', response);
+                                resolve(response);
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Chrome: sendMessage error:', error);
+                        reject(error);
+                    }
+                } else {
+                    reject(new Error('No compatible messaging API found'));
+                }
+            });
+        }
+
         function openCreatePage() {
             try {
-                // Try the standard way first
-                if (chrome && chrome.tabs && chrome.runtime) {
-                    chrome.tabs.create({
-                        url: chrome.runtime.getURL('create.html')
+                // Use Safari-compatible API detection
+                const extensionAPI = getExtensionAPI();
+                if (extensionAPI && extensionAPI.tabs && extensionAPI.runtime) {
+                    extensionAPI.tabs.create({
+                        url: extensionAPI.runtime.getURL('create.html')
                     });
                     window.close();
                 } else {
@@ -145,8 +215,17 @@
         }
 
         function openManagePage() {
-            // For now, just show instructions since manage is complex
-            alert('To manage links:\\n\\n1. Create links using the form below\\n2. Test them by typing http://go/linkname\\n3. Use Safari Web Inspector to debug if needed');
+            try {
+                const extensionAPI = getExtensionAPI();
+                if (extensionAPI && extensionAPI.runtime) {
+                    loadManageInterface();
+                } else {
+                    showManageError();
+                }
+            } catch (error) {
+                console.error('Error opening manage page:', error);
+                showManageError();
+            }
         }
 
         function showInlineCreateForm() {
@@ -211,20 +290,12 @@
             }
             
             try {
-                // Try to save the mapping
-                const response = await new Promise((resolve, reject) => {
-                    chrome.runtime.sendMessage({
-                        action: 'saveMapping',
-                        shortName: shortName,
-                        url: targetUrl,
-                        description: description
-                    }, (response) => {
-                        if (chrome.runtime.lastError) {
-                            reject(new Error(chrome.runtime.lastError.message));
-                        } else {
-                            resolve(response);
-                        }
-                    });
+                // Try to save the mapping using Safari messaging
+                const response = await sendMessage({
+                    action: 'saveMapping',
+                    shortName: shortName,
+                    url: targetUrl,
+                    description: description
                 });
                 
                 if (response.error) {
@@ -247,19 +318,238 @@
             resultDiv.style.border = \`1px solid \${type === 'error' ? '#fcc' : '#cfc'}\`;
         }
 
+        async function loadManageInterface() {
+            try {
+                console.log('Safari: Loading manage interface...');
+                const response = await sendMessage({ action: 'getAllMappings' });
+                
+                if (response && response.error) {
+                    throw new Error(response.error);
+                }
+
+                console.log('Safari: Received mappings:', response);
+                showManageInterface(response || {});
+            } catch (error) {
+                console.error('Safari: Error loading manage interface:', error);
+                showManageError();
+            }
+        }
+
+        function showManageInterface(mappings) {
+            const mappingEntries = Object.entries(mappings);
+            
+            document.body.innerHTML = \`
+                <div style="padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 600px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                        <button onclick="goBack()" style="background: #f1f3f4; border: 1px solid #dadce0; border-radius: 6px; padding: 8px 12px; cursor: pointer; margin-right: 12px;">← Back</button>
+                        <h2 style="margin: 0;">📝 Manage GoLinks</h2>
+                    </div>
+                    
+                    \${mappingEntries.length === 0 ? \`
+                        <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🔗</div>
+                            <h3 style="margin: 0 0 8px 0; color: #6c757d;">No GoLinks yet</h3>
+                            <p style="margin: 0; color: #6c757d;">Create your first GoLink to get started!</p>
+                            <button onclick="showInlineCreateForm()" style="background: #007AFF; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; margin-top: 16px;">
+                                + Create GoLink
+                            </button>
+                        </div>
+                    \` : \`
+                        <div style="margin-bottom: 16px;">
+                            <button onclick="showInlineCreateForm()" style="background: #007AFF; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                                + Create New GoLink
+                            </button>
+                        </div>
+                        
+                        <div style="background: white; border-radius: 8px; border: 1px solid #e9ecef; overflow: hidden;">
+                            \${mappingEntries.map(([shortName, mapping]) => \`
+                                <div style="padding: 16px; border-bottom: 1px solid #e9ecef; position: relative;" id="mapping-\${shortName}">
+                                    <div style="display: flex; justify-content: between; align-items: flex-start;">
+                                        <div style="flex: 1;">
+                                            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                                <strong style="font-size: 16px; color: #007AFF;">go/\${shortName}</strong>
+                                                <button onclick="testGoLink('\${shortName}')" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 12px;">Test</button>
+                                            </div>
+                                            <div style="margin-bottom: 4px; word-break: break-all;">
+                                                <strong>URL:</strong> <a href="\${mapping.url}" target="_blank" style="color: #6f42c1;">\${mapping.url}</a>
+                                            </div>
+                                            \${mapping.description ? \`<div style="margin-bottom: 4px;"><strong>Description:</strong> \${mapping.description}</div>\` : ''}
+                                            <div style="font-size: 12px; color: #6c757d;">
+                                                Created: \${new Date(mapping.createdAt).toLocaleDateString()}
+                                                \${mapping.updatedAt && mapping.updatedAt !== mapping.createdAt ? \`, Updated: \${new Date(mapping.updatedAt).toLocaleDateString()}\` : ''}
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 8px; margin-left: 12px;">
+                                            <button onclick="editMapping('\${shortName}')" style="background: #ffc107; color: #212529; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">Edit</button>
+                                            <button onclick="deleteMapping('\${shortName}')" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            \`).join('')}
+                        </div>
+                    \`}
+                    
+                    <div id="actionResult" style="margin-top: 16px; padding: 12px; border-radius: 6px; display: none;"></div>
+                </div>
+            \`;
+        }
+
+        function showManageError() {
+            document.body.innerHTML = \`
+                <div style="padding: 20px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
+                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                        <button onclick="goBack()" style="background: #f1f3f4; border: 1px solid #dadce0; border-radius: 6px; padding: 8px 12px; cursor: pointer; margin-right: 12px;">← Back</button>
+                        <h2 style="margin: 0;">⚠️ Manage Error</h2>
+                    </div>
+                    <p>Unable to load manage interface.</p>
+                    <p style="font-size: 12px; color: #666;">
+                        Please check Safari → Preferences → Extensions<br>
+                        and ensure GoLinks Safari is enabled.
+                    </p>
+                </div>
+            \`;
+        }
+
+        function goBack() {
+            location.reload();
+        }
+
+        function testGoLink(shortName) {
+            try {
+                window.open(\`http://go/\${shortName}\`, '_blank');
+            } catch (error) {
+                showActionResult('Error testing link: ' + error.message, 'error');
+            }
+        }
+
+        async function editMapping(shortName) {
+            try {
+                const response = await sendMessage({ action: 'getMapping', shortName });
+
+                if (response && response.error) {
+                    throw new Error(response.error);
+                }
+
+                if (!response) {
+                    throw new Error('Mapping not found');
+                }
+
+                showEditForm(shortName, response);
+            } catch (error) {
+                showActionResult('Error loading mapping: ' + error.message, 'error');
+            }
+        }
+
+        function showEditForm(shortName, mapping) {
+            const mappingDiv = document.getElementById(\`mapping-\${shortName}\`);
+            mappingDiv.innerHTML = \`
+                <form onsubmit="updateMapping(event, '\${shortName}')" style="padding: 16px; background: #f8f9fa; border-radius: 6px;">
+                    <h4 style="margin: 0 0 16px 0;">Edit go/\${shortName}</h4>
+                    
+                    <div style="margin-bottom: 12px;">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Target URL:</label>
+                        <input type="url" id="edit-url-\${shortName}" required value="\${mapping.url}"
+                               style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 4px; font-weight: 500;">Description:</label>
+                        <input type="text" id="edit-description-\${shortName}" value="\${mapping.description || ''}" maxlength="100"
+                               style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 8px;">
+                        <button type="submit" style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">Save</button>
+                        <button type="button" onclick="cancelEdit('\${shortName}')" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;">Cancel</button>
+                    </div>
+                </form>
+            \`;
+        }
+
+        async function updateMapping(event, shortName) {
+            event.preventDefault();
+            
+            const url = document.getElementById(\`edit-url-\${shortName}\`).value.trim();
+            const description = document.getElementById(\`edit-description-\${shortName}\`).value.trim();
+            
+            if (!url) {
+                showActionResult('URL is required', 'error');
+                return;
+            }
+            
+            try {
+                const response = await sendMessage({
+                    action: 'saveMapping',
+                    shortName,
+                    url,
+                    description
+                });
+                
+                if (response.error) {
+                    throw new Error(response.error);
+                }
+                
+                showActionResult(\`✅ Updated go/\${shortName}\`, 'success');
+                setTimeout(() => loadManageInterface(), 1000);
+            } catch (error) {
+                showActionResult('Error updating mapping: ' + error.message, 'error');
+            }
+        }
+
+        function cancelEdit(shortName) {
+            loadManageInterface();
+        }
+
+        async function deleteMapping(shortName) {
+            if (!confirm(\`Are you sure you want to delete go/\${shortName}?\`)) {
+                return;
+            }
+            
+            try {
+                const response = await sendMessage({ action: 'deleteMapping', shortName });
+                
+                if (response.error) {
+                    throw new Error(response.error);
+                }
+                
+                showActionResult(\`✅ Deleted go/\${shortName}\`, 'success');
+                setTimeout(() => loadManageInterface(), 1000);
+            } catch (error) {
+                showActionResult('Error deleting mapping: ' + error.message, 'error');
+            }
+        }
+
+        function showActionResult(message, type) {
+            const resultDiv = document.getElementById('actionResult');
+            if (resultDiv) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = message;
+                resultDiv.style.background = type === 'error' ? '#fee' : '#efe';
+                resultDiv.style.color = type === 'error' ? '#c00' : '#060';
+                resultDiv.style.border = \`1px solid \${type === 'error' ? '#fcc' : '#cfc'}\`;
+                
+                setTimeout(() => {
+                    resultDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
         // Test if extension APIs are available on load
         document.addEventListener('DOMContentLoaded', function() {
-            if (typeof chrome === 'undefined' || !chrome.runtime) {
+            const extensionAPI = getExtensionAPI();
+            if (!extensionAPI || !extensionAPI.runtime) {
                 document.body.innerHTML = \`
                     <div style="padding: 20px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
                         <h2>⚠️ Extension Error</h2>
-                        <p>Chrome extension APIs not available.</p>
+                        <p>Safari extension APIs not available.</p>
                         <p style="font-size: 12px; color: #666;">
                             Please check Safari → Preferences → Extensions<br>
                             and ensure GoLinks Safari is enabled.
                         </p>
                     </div>
                 \`;
+            } else {
+                console.log('Safari: Extension APIs available, ready to use');
             }
         });
     </script>
