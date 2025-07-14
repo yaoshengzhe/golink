@@ -20,10 +20,17 @@ Transform long URLs into simple shortcuts. Type `go/gmail` instead of `https://m
 
 ## Quick Start
 
-1. **Install**: Load the extension in Chrome (`chrome://extensions/` > "Load unpacked")
-2. **Create**: Type `go` + Tab + `mylink` in your address bar
-3. **Navigate**: Enter your destination URL and save
+### Chrome/Edge
+1. **Build**: Run `npm run build:chrome`
+2. **Install**: Load `dist/chrome/` in Chrome (`chrome://extensions/` > "Load unpacked")
+3. **Create**: Type `go` + Tab + `mylink` in your address bar
 4. **Use**: From now on, `go` + Tab + `mylink` takes you there instantly
+
+### Safari
+1. **Build**: Run `npm run safari:full`
+2. **Install**: Build in Xcode and enable in Safari
+3. **Create**: Click extension icon or visit `http://go/newlink`
+4. **Use**: Type `http://go/mylink` in address bar
 
 ## Usage Examples
 
@@ -167,12 +174,25 @@ npm run lint         # Check for issues
 ### Project Structure
 ```
 golink/
-├── manifest.json    # Extension configuration
-├── background.js    # URL interception logic
-├── create.html      # Shortcut creation page
-├── popup.html       # Management interface
-├── styles.css       # UI styling
-└── tests/           # Unit and integration tests
+├── src/             # Source code
+│   ├── shared/      # Shared code (icons, styles, etc.)
+│   ├── chrome/      # Chrome-specific implementation
+│   └── safari/      # Safari-specific implementation
+├── dist/            # Built extensions (git ignored)
+│   ├── chrome/      # Chrome extension ready to load
+│   └── safari/      # Safari extension ready to convert
+├── scripts/         # Build and utility scripts
+├── tests/           # Unit and integration tests
+└── docs/            # Documentation
+```
+
+### Build Commands
+```bash
+npm run build:chrome    # Build Chrome extension
+npm run build:safari    # Build Safari extension  
+npm run safari:full     # Build and convert Safari extension
+npm run test           # Run tests
+npm run lint           # Check code quality
 ```
 
 ## Troubleshooting

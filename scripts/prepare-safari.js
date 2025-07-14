@@ -55,10 +55,18 @@ fs.copyFileSync(safariCreateSource, safariCreateDest);
 console.log('✅ Copied Safari-specific comprehensive create.html');
 
 // Copy Safari-specific popup (with working manage page)
+const safariPopupFixedSource = path.join(__dirname, 'safari-popup-fixed.html');
 const safariPopupSource = path.join(__dirname, 'safari-popup.html');
 const safariPopupDest = path.join(safariDir, 'popup.html');
-fs.copyFileSync(safariPopupSource, safariPopupDest);
-console.log('✅ Copied Safari-specific popup.html with manage functionality');
+
+// Use the fixed version if it exists
+if (fs.existsSync(safariPopupFixedSource)) {
+  fs.copyFileSync(safariPopupFixedSource, safariPopupDest);
+  console.log('✅ Copied Safari-specific popup.html (FIXED version) with manage functionality');
+} else {
+  fs.copyFileSync(safariPopupSource, safariPopupDest);
+  console.log('✅ Copied Safari-specific popup.html with manage functionality');
+}
 
 // Copy debug page
 const debugSource = path.join(sourceDir, 'debug.html');

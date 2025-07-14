@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Safari Extension Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Safari GoLinks Extension Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Check Extension API</h3>
+        <button onclick="testAPI()">Test API Availability</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Send Message to Background</h3>
+        <button onclick="testMessage()">Test Message</button>
+        <div id="message-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Create GoLink</h3>
+        <input type="text" id="shortName" placeholder="Short name" value="test">
+        <input type="text" id="url" placeholder="URL" value="https://example.com">
+        <button onclick="testCreate()">Create Link</button>
+        <div id="create-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 4: Get All Links</h3>
+        <button onclick="testGetAll()">Get All Links</button>
+        <div id="getall-result"></div>
+    </div>
+
+    <script>
+        function getAPI() {
+            if (typeof browser !== 'undefined') return browser;
+            if (typeof chrome !== 'undefined') return chrome;
+            return null;
+        }
+
+        function testAPI() {
+            const api = getAPI();
+            const resultDiv = document.getElementById('api-result');
+            
+            if (api) {
+                const info = {
+                    type: typeof browser !== 'undefined' ? 'browser' : 'chrome',
+                    hasRuntime: !!api.runtime,
+                    hasStorage: !!api.storage,
+                    hasTabs: !!api.tabs
+                };
+                resultDiv.innerHTML = '<pre class="success">' + JSON.stringify(info, null, 2) + '</pre>';
+            } else {
+                resultDiv.innerHTML = '<div class="error">No extension API found</div>';
+            }
+        }
+
+        async function testMessage() {
+            const resultDiv = document.getElementById('message-result');
+            const api = getAPI();
+            
+            if (!api || !api.runtime) {
+                resultDiv.innerHTML = '<div class="error">No runtime API</div>';
+                return;
+            }
+
+            try {
+                // Test with a promise-based approach
+                const response = await new Promise((resolve, reject) => {
+                    api.runtime.sendMessage({ action: 'getAllMappings' }, (response) => {
+                        if (api.runtime.lastError) {
+                            reject(api.runtime.lastError);
+                        } else {
+                            resolve(response);
+                        }
+                    });
+                });
+                
+                resultDiv.innerHTML = '<pre class="success">' + JSON.stringify(response, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function testCreate() {
+            const resultDiv = document.getElementById('create-result');
+            const api = getAPI();
+            const shortName = document.getElementById('shortName').value;
+            const url = document.getElementById('url').value;
+            
+            if (!api || !api.runtime) {
+                resultDiv.innerHTML = '<div class="error">No runtime API</div>';
+                return;
+            }
+
+            try {
+                const response = await new Promise((resolve, reject) => {
+                    api.runtime.sendMessage({ 
+                        action: 'saveMapping',
+                        shortName: shortName,
+                        url: url,
+                        description: 'Test link'
+                    }, (response) => {
+                        if (api.runtime.lastError) {
+                            reject(api.runtime.lastError);
+                        } else {
+                            resolve(response);
+                        }
+                    });
+                });
+                
+                resultDiv.innerHTML = '<pre class="success">' + JSON.stringify(response, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        async function testGetAll() {
+            const resultDiv = document.getElementById('getall-result');
+            const api = getAPI();
+            
+            if (!api || !api.runtime) {
+                resultDiv.innerHTML = '<div class="error">No runtime API</div>';
+                return;
+            }
+
+            try {
+                const response = await new Promise((resolve, reject) => {
+                    api.runtime.sendMessage({ action: 'getAllMappings' }, (response) => {
+                        if (api.runtime.lastError) {
+                            reject(api.runtime.lastError);
+                        } else {
+                            resolve(response);
+                        }
+                    });
+                });
+                
+                resultDiv.innerHTML = '<pre class="success">' + JSON.stringify(response, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Auto-test API on load
+        window.onload = () => {
+            testAPI();
+        };
+    </script>
+</body>
+</html>
